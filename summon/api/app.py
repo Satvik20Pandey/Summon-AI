@@ -4,6 +4,7 @@ their results, runs the curator and serves the Memory Lens."""
 from __future__ import annotations
 
 import asyncio
+from contextlib import asynccontextmanager
 import json
 import logging
 import time
@@ -64,13 +65,17 @@ def require_token(authorization: str = Header(default="")) -> None:
         raise HTTPException(401, "bad or missing token")
 
 
-@app.on_event("startup")
-async def _startup() -> None:
+@asynccontextmanager
+async def _lifespan(_: FastAPI):
     s = get_settings()
     g = graph()
     mem.upsert_developer(g, s.summon_developer_id, s.summon_developer_name,
                          s.summon_developer_phone)
     log.info("summon api up: voice=%s developer=%s", s.summon_voice, s.summon_developer_id)
+    yield
+
+
+app.router.lifespan_context = _lifespan
 
 
 # --------------------------------------------------------------------------- models

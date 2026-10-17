@@ -62,9 +62,9 @@ _ANSWER_TASK = (
 
 def summon_done_flow() -> dict[str, Any]:
     """Outbound: report a finished task, ask up to three questions, take instructions."""
-    greet = ("Hi {name}, this is Summon, an AI assistant calling for {bot}. {task_title} on "
-             "{project} is done. {s1} {s2} {s3} {s4} I have {n_q} quick questions, do you have "
-             "a minute?")
+    greet = ("Hi {name}, this is Summon, an AI assistant calling for {bot}. {bot} has finished "
+             "a task on {project}. {s1} {s2} {s3} {s4} I have {n_q} quick questions, do you "
+             "have a minute?")
     nodes = [
         _say("greet", greet, ["ready", "busy", "knowledge"],
              {"ready": "ask_q1", "busy": "busy_bye"}, "ask_q1",

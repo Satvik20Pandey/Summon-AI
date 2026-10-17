@@ -91,7 +91,7 @@ def condense(summary: str, questions: list[str]) -> tuple[list[str], list[str]]:
 
 def _clean(text: str) -> str:
     text = re.sub(r"```.*?```", " ", text, flags=re.S)
-    text = re.sub(r"[`*_#>|]+", "", text)
+    text = re.sub(r"[`*#>|]+", "", text)
     return re.sub(r"\s+", " ", text).strip()
 
 

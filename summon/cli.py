@@ -14,6 +14,13 @@ import typer
 
 from summon.config import get_settings
 
+# Hooks and agents pipe UTF-8 JSON through us on Windows consoles that default to cp1252.
+for _stream in (sys.stdin, sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 app = typer.Typer(no_args_is_help=True, add_completion=False,
                   help="Summon AI: your coding agents call you, and remember.")
 
@@ -104,6 +111,63 @@ def hook(agent: str = typer.Argument(..., help="claude | codex")) -> None:
     result = run_stop_hook(agent, payload)
     if result is not None:
         typer.echo(json.dumps(result))
+
+
+# --------------------------------------------------------------------------- init
+
+@app.command()
+def init(path: str = typer.Argument(".", help="project directory to wire up")) -> None:
+    """Wire a project to Summon: Claude Code Stop hook + MCP server, Codex hook, Cursor
+    MCP; and ~/.summon/.env so hooks can find the API from any directory."""
+    import shutil
+    from pathlib import Path
+
+    from summon.config import GLOBAL_ENV
+
+    s = get_settings()
+    root = Path(path).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    exe_dir = Path(sys.executable).parent          # the venv's Scripts/bin
+    summon_exe = _find_exe(exe_dir, "summon")
+    mcp_exe = _find_exe(exe_dir, "summon-mcp")
+    if not summon_exe or not mcp_exe:
+        summon_exe, mcp_exe = shutil.which("summon") or "summon", shutil.which("summon-mcp") or "summon-mcp"
+
+    GLOBAL_ENV.parent.mkdir(exist_ok=True)
+    GLOBAL_ENV.write_text(
+        f"SUMMON_API_URL={s.summon_api_url}\nSUMMON_API_TOKEN={s.summon_api_token}\n", "utf-8")
+
+    def write(rel: str, data: dict) -> None:
+        p = root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(data, indent=2) + "\n", "utf-8")
+        typer.echo(f"  wrote {p}")
+
+    hook = lambda agent: {"hooks": {"Stop": [{"hooks": [  # noqa: E731
+        {"type": "command", "command": f'"{summon_exe}" hook {agent}', "timeout": 900}]}]}}
+    mcp = lambda agent: {"mcpServers": {"summon": {  # noqa: E731
+        "type": "stdio", "command": str(mcp_exe), "args": [],
+        "env": {"SUMMON_AGENT": agent, "SUMMON_PROJECT": root.name}, "timeout": 900000}}}
+
+    typer.echo(f"Wiring {root} (project id: {root.name})")
+    write(".claude/settings.json", hook("claude"))
+    write(".mcp.json", mcp("claude-code"))
+    write(".codex/hooks.json", hook("codex"))
+    write(".cursor/mcp.json", mcp("cursor"))
+    typer.echo("\nCodex MCP is user-level; add this to ~/.codex/config.toml:\n")
+    typer.echo("[mcp_servers.summon]\n"
+               f'command = "{str(mcp_exe).replace(chr(92), "/")}"\nargs = []\n'
+               "startup_timeout_sec = 20\ntool_timeout_sec = 900\n"
+               "[mcp_servers.summon.env]\n"
+               f'SUMMON_AGENT = "codex"\nSUMMON_PROJECT = "{root.name}"\n')
+    typer.echo("Then in Codex run /hooks once to trust .codex/hooks.json.")
+
+
+def _find_exe(d, name: str):
+    for cand in (d / f"{name}.exe", d / name):
+        if cand.exists():
+            return cand
+    return None
 
 
 # --------------------------------------------------------------------------- demo seed
