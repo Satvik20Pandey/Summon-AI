@@ -92,3 +92,44 @@ def test_full_mock_loop(client):
 
 def test_token_required(client):
     assert client.post("/api/calls", json={}).status_code == 401
+
+
+def test_webhook_signature_and_idempotency(client, monkeypatch):
+    """A signed call.analyzed for a placed call is applied once; a redelivery is a no-op."""
+    import json
+
+    from summon.config import get_settings
+    from summon.voice.shravan import sign
+
+    monkeypatch.setattr(get_settings(), "shravan_webhook_secret", "whsec_test")
+    client.post("/api/sessions", json={"agent": "claude-code", "project": "demo",
+                                       "session_id": "s9"}, headers=H)
+    r = client.post("/api/calls", json={
+        "project": "demo", "agent": "claude-code", "session_id": "s9", "task_id": "t9",
+        "title": "Webhook task", "summary": "Did a thing.", "questions": ["Ship it?"]},
+        headers=H)
+    call_id = r.json()["call_id"]
+    provider_id = r.json().get("provider_call_id") or f"mock-{call_id}"
+    evt = {"id": "evt_dup_1", "object": "event", "type": "call.analyzed", "created": 1,
+           "livemode": False, "data": {"object": {
+               "id": provider_id, "status": "completed", "direction": "outbound",
+               "duration_seconds": 30, "disposition": "information_provided",
+               "metadata": {"summon_call_id": call_id},
+               "transcript": [
+                   {"role": "assistant", "content": "Ship it?", "ts": "t", "node_id": "ask_q1"},
+                   {"role": "user", "content": "Yes, ship it to staging first.", "ts": "t",
+                    "node_id": "ask_q1"},
+                   {"role": "assistant", "content": "Anything else?", "ts": "t", "node_id": "ask_more"},
+                   {"role": "user", "content": "Bump the version after.", "ts": "t",
+                    "node_id": "ask_more"}]}}}
+    body = json.dumps(evt, separators=(",", ":"), sort_keys=True).encode()
+    bad = client.post("/api/webhooks/shravan", content=body,
+                      headers={"Shravan-Signature": "t=1,v1=00", "Content-Type": "application/json"})
+    assert bad.status_code == 401
+    hdr = {"Shravan-Signature": sign(body, "whsec_test"), "Content-Type": "application/json"}
+    assert client.post("/api/webhooks/shravan", content=body, headers=hdr).json() == {"ok": True}
+    dup = client.post("/api/webhooks/shravan", content=body, headers=hdr).json()
+    assert dup.get("duplicate") is True
+    v = client.get(f"/api/calls/{call_id}").json()
+    assert v["status"] == "analyzed"
+    assert len(v["instructions"]) == 1 and len(v["answers"]) == 1
