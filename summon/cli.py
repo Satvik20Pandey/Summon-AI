@@ -160,7 +160,12 @@ def init(path: str = typer.Argument(".", help="project directory to wire up")) -
         "env": {"SUMMON_AGENT": agent, "SUMMON_PROJECT": root.name}, "timeout": 900000}}}
 
     typer.echo(f"Wiring {root} (project id: {root.name})")
-    write(".claude/settings.json", hook("claude"))
+    claude_settings = hook("claude")
+    # Approve the project MCP server and its tools up front, so `claude -p` runs (and
+    # the inbox daemon) can read Summon memory without an interactive prompt.
+    claude_settings["enableAllProjectMcpServers"] = True
+    claude_settings["permissions"] = {"allow": ["mcp__summon"]}
+    write(".claude/settings.json", claude_settings)
     write(".mcp.json", mcp("claude-code"))
     write(".codex/hooks.json", hook("codex"))
     write(".cursor/mcp.json", mcp("cursor"))
