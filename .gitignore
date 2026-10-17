@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
+dist/
+*.egg-info/
+.summon/
+examples/demo_repo/.claude/settings.local.json
