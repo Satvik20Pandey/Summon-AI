@@ -9,4 +9,8 @@ __pycache__/
 dist/
 *.egg-info/
 .summon/
-examples/demo_repo/.claude/settings.local.json
+# written by `summon init` with machine-specific absolute paths
+examples/demo_repo/.claude/
+examples/demo_repo/.mcp.json
+examples/demo_repo/.codex/
+examples/demo_repo/.cursor/

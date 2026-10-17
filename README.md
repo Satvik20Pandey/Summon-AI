@@ -1,5 +1,7 @@
 # Summon AI
 
+**Made by Satvik Pandey** · [GitHub @Satvik20Pandey](https://github.com/Satvik20Pandey)
+
 **Your coding agents share one memory — and every decision traces back to you, by phone.**
 
 When Claude Code or Codex finishes a task, Summon phones you, reads the summary, asks its
@@ -7,7 +9,7 @@ open question and takes your spoken instruction. The agent continues with what y
 A different agent, in a fresh session, retrieves that decision from **FalkorDB** together
 with the call it came from, and respects it.
 
-Built for [Graph Hacks](https://www.wemakedevs.org/hackathons/falkordb) (WeMakeDevs ×
+Built by Satvik Pandey for [Graph Hacks](https://www.wemakedevs.org/hackathons/falkordb) (WeMakeDevs ×
 FalkorDB), Oct 15–18, 2026.
 **Tracks entered: 02 Agent Memory and Coordination** (primary) and **01 Agents That Act on
 Connected Data**.
@@ -55,7 +57,7 @@ Full model: [docs/GRAPH_MODEL.md](docs/GRAPH_MODEL.md). Every Cypher statement:
 Everything else — hooks, MCP, curator, graph — is identical to the real thing.
 
 ```bash
-git clone https://github.com/Satvik20Pandey/summon-ai && cd summon-ai
+git clone https://github.com/Satvik20Pandey/Summon-AI && cd Summon-AI
 cp .env.example .env            # defaults are fine for mock mode
 docker compose up -d falkordb   # or any FalkorDB on localhost:6379 (see "FalkorDB without Docker")
 uv sync && uv run summon demo-seed       # optional: yesterday's memory
@@ -139,9 +141,9 @@ web/                  landing page + Memory Lens (cytoscape graph, provenance pa
 
 ## Disclosure
 
-- **AI assistance.** Built with Claude Code (Anthropic). Every query, hook and
-  architectural choice was reviewed by the author and is explained in this README and
-  `docs/`.
+- **AI coding assistants (Rule 11).** AI coding assistants were used while building this
+  project. Every query, hook and architectural choice was designed and reviewed by
+  Satvik Pandey and is explained in this README and `docs/`.
 - **Pre-existing infrastructure.** Voice calls are placed through the public developer API
   of Shravan.ai, a voice-agent product by the same author that predates the hackathon. It is
   used only as a telephony provider (`POST /v1/agents`, `POST /v1/calls`, signed webhooks),
@@ -157,6 +159,10 @@ web/                  landing page + Memory Lens (cytoscape graph, provenance pa
   the combination: phone-mediated decisions as graph nodes, one memory for every agent, and
   a path from each decision back to the call.
 
+## Author
+
+Made by **Satvik Pandey** — [github.com/Satvik20Pandey](https://github.com/Satvik20Pandey)
+
 ## License
 
-MIT
+MIT © 2026 Satvik Pandey

@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Your coding agents share one memory in FalkorDB, and every decision traces back to you, by phone."
 readme = "README.md"
 license = { text = "MIT" }
+authors = [{ name = "Satvik Pandey" }]
 requires-python = ">=3.11"
 dependencies = [
     "falkordb>=1.8,<2",
