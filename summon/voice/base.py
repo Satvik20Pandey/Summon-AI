@@ -42,10 +42,11 @@ class CallScript:
     def spoken_lines(self) -> list[tuple[str, str]]:
         """(node_id, text) in order; used by the mock backend and the UI."""
         fv = self.flow_vars()
-        lines = [("greet", f"Hi {self.developer_name}, this is Summon, an AI assistant calling "
-                           f"for {fv['bot']}. {fv['bot']} has finished a task on {fv['project']}. "
-                           f"{' '.join(c for c in self.summary_chunks if c)} "
-                           f"I have {fv['n_q']} quick questions, do you have a minute?")]
+        greet = (f"Hi {self.developer_name}, this is Summon, an AI assistant calling "
+                 f"for {fv['bot']}. {fv['bot']} has finished a task on {fv['project']}. "
+                 f"{' '.join(c for c in self.summary_chunks if c)} "
+                 f"I have {fv['n_q']} quick questions, do you have a minute?")
+        lines = [("greet", greet)]
         for i, q in enumerate(self.questions, 1):
             if q:
                 lines.append((f"ask_q{i}", q))

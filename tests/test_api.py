@@ -14,7 +14,7 @@ os.environ.setdefault("SUMMON_VOICE", "mock")
 os.environ["SUMMON_DEVELOPER_ID"] = f"test_{uuid.uuid4().hex[:6]}"
 os.environ["SUMMON_API_TOKEN"] = "t"
 
-from summon.graph.schema import get_db, graph_name, ping  # noqa: E402
+from summon.graph.schema import get_db, graph_name, ping
 
 pytestmark = pytest.mark.skipif(not ping(), reason="no FalkorDB reachable")
 

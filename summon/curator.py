@@ -90,7 +90,7 @@ def condense(summary: str, questions: list[str]) -> tuple[list[str], list[str]]:
 
 
 def _clean(text: str) -> str:
-    text = re.sub(r"```.*?```", " ", text, flags=re.S)
+    text = re.sub(r"```.*?```", " ", text, flags=re.DOTALL)
     text = re.sub(r"[`*#>|]+", "", text)
     return re.sub(r"\s+", " ", text).strip()
 
@@ -195,12 +195,12 @@ def _heuristic(transcript: list[dict[str, Any]], question_ids: list[str]) -> Ext
             idx = int(m.group(1)) - 1
             if 0 <= idx < len(question_ids):
                 ex.answers.append({"question_id": question_ids[idx], "text": text})
-            if re.search(r"\b(always|never|keep|must|should|from now on)\b", text, re.I):
+            if re.search(r"\b(always|never|keep|must|should|from now on)\b", text, re.IGNORECASE):
                 ex.decisions.append({"text": text, "topic": "", "applies_to": ""})
         elif node in ("ask_more", "capture_task", "confirm"):
             ex.instructions.append(text)
-        qh = re.search(r"(?:before|after)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", text, re.I)
-        if qh and re.search(r"\bcall\b", text, re.I):
+        qh = re.search(r"(?:before|after)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", text, re.IGNORECASE)
+        if qh and re.search(r"\bcall\b", text, re.IGNORECASE):
             h = int(qh.group(1)) % 12 + (12 if (qh.group(3) or "").lower() == "pm" else 0)
             if "before" in text.lower():
                 ex.preferences.append({"key": "quiet_hours", "value": f"22:00-{h:02d}:00"})

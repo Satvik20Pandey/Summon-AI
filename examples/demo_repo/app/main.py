@@ -28,6 +28,11 @@ def list_items():
     return list(ITEMS.values())
 
 
+@app.get("/items/count")
+def count_items():
+    return {"count": len(ITEMS)}
+
+
 @app.get("/items/{item_id}")
 def get_item(item_id: str):
     return ITEMS.get(item_id) or {"error": "not found"}

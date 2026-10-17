@@ -77,7 +77,6 @@ class ShravanVoice:
     # ------------------------------------------------------------------ calls
 
     async def place_call(self, call_id: str, to_phone: str, script: CallScript) -> PlacedCall:
-        s = get_settings()
         body: dict[str, Any] = {
             "agent_id": self.agent_id,
             "to": to_phone,
@@ -119,7 +118,7 @@ def verify_signature(header: str, body: bytes, secret: str, tolerance: int = 300
     f"{t}." + raw body). Two v1 values appear during secret rotation."""
     if not header or not secret:
         return False
-    parts = dict()
+    parts: dict[str, str] = {}
     v1s: list[str] = []
     for item in header.split(","):
         k, _, v = item.strip().partition("=")

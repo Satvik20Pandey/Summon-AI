@@ -4,10 +4,11 @@ their results, runs the curator and serves the Memory Lens."""
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
 import json
 import logging
+import re
 import time
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
@@ -186,8 +187,8 @@ async def place_call(body: CallIn) -> dict[str, Any]:
     mem.upsert_project(g, body.project, path=body.project_path)
     mem.start_session(g, body.session_id, body.agent, body.project)
     chunks, questions = condense(body.summary, body.questions)
-    qids = mem.record_task(g, body.task_id, body.session_id, body.title, body.summary,
-                           files=body.files, questions=questions, priority=body.priority)
+    mem.record_task(g, body.task_id, body.session_id, body.title, body.summary,
+                    files=body.files, questions=questions, priority=body.priority)
 
     existing = mem.call_for_task(g, body.task_id)
     if existing:
@@ -217,7 +218,7 @@ async def place_call(body: CallIn) -> dict[str, Any]:
                     task_id=body.task_id, script=script.to_dict())
     try:
         placed = await backend().place_call(call_id, s.summon_developer_phone, script)
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         mem.update_call(g, call_id, status="failed", failure_reason=str(exc)[:300])
         events.publish("call.failed", call_id=call_id, reason=str(exc)[:300])
         raise HTTPException(502, f"could not place call: {exc}") from exc
@@ -473,10 +474,14 @@ async def _inbound_call(g, obj: dict[str, Any]) -> None:
 
 
 def _guess_project(g, transcript: list[dict[str, Any]]) -> str | None:
+    """Match what the caller said against known projects, ignoring -, _ and case."""
     rows = g.ro_query("MATCH (p:Project) RETURN p.id, p.name").result_set
-    text = " ".join(t.get("content", "") for t in transcript if t.get("role") == "user").lower()
+    def norm(x: str | None) -> str:
+        return re.sub(r"[^a-z0-9]+", " ", (x or "").lower()).strip()
+
+    text = norm(" ".join(t.get("content", "") for t in transcript if t.get("role") == "user"))
     for pid, name in rows:
-        if (name or "").lower() in text or pid.lower() in text:
+        if (norm(name) and norm(name) in text) or norm(pid) in text:
             return pid
     return rows[0][0] if len(rows) == 1 else None
 

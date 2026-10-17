@@ -6,7 +6,7 @@ The reply is turned into a transcript shaped exactly like the real provider's
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from summon.voice.base import CallScript, PlacedCall
@@ -29,7 +29,7 @@ class MockVoice:
 
 def build_transcript(script: CallScript, answers: list[str], more: str) -> list[dict[str, Any]]:
     """Interleave the agent's lines with the human's typed replies."""
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    now = datetime.now(UTC).isoformat(timespec="seconds")
     t: list[dict[str, Any]] = []
     lines = script.spoken_lines()
     t.append({"role": "assistant", "content": lines[0][1], "ts": now, "node_id": "greet"})

@@ -155,7 +155,7 @@ async def summon_done(title: str, summary: str, questions: list[str] | None = No
 @mcp.tool()
 async def summon_inbox(project: str = "") -> str:
     """Instructions the developer phoned in that are still pending for this project."""
-    base, headers = _base()
+    base, _ = _base()
     project = _project(project)
     async with httpx.AsyncClient(timeout=30) as c:
         r = await c.get(f"{base}/api/inbox", params={"project": project})

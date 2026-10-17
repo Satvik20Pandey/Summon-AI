@@ -36,6 +36,9 @@ packages = ["summon"]
 line-length = 100
 target-version = "py311"
 
+[tool.ruff.lint]
+ignore = ["B008"]  # typer.Option in defaults is the idiom
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]

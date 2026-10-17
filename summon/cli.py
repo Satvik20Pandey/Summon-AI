@@ -7,7 +7,6 @@ import asyncio
 import json
 import os
 import sys
-from typing import Optional
 
 import httpx
 import typer
@@ -33,7 +32,7 @@ def _api() -> tuple[str, dict[str, str]]:
 # --------------------------------------------------------------------------- serve
 
 @app.command()
-def serve(host: str = "0.0.0.0", port: Optional[int] = None, reload: bool = False) -> None:
+def serve(host: str = "0.0.0.0", port: int | None = None, reload: bool = False) -> None:
     """Run the Summon API (and the Memory Lens UI)."""
     import uvicorn
 
@@ -44,7 +43,7 @@ def serve(host: str = "0.0.0.0", port: Optional[int] = None, reload: bool = Fals
 # --------------------------------------------------------------------------- setup
 
 @app.command()
-def setup(webhook_url: Optional[str] = None) -> None:
+def setup(webhook_url: str | None = None) -> None:
     """Create the Summon voice agents on the provider and register the results webhook.
     Prints the env values to store (agent id, webhook secret)."""
     s = get_settings()
@@ -79,7 +78,7 @@ def pending() -> None:
 
 
 @app.command()
-def answer(call_id: Optional[str] = typer.Argument(None),
+def answer(call_id: str | None = typer.Argument(None),
            answers: list[str] = typer.Option([], "--a", help="answer per question, in order"),
            more: str = typer.Option("", "--more", help="instruction for the agent")) -> None:
     """Reply to a pending mock call (the phone call, typed)."""
@@ -143,9 +142,9 @@ def init(path: str = typer.Argument(".", help="project directory to wire up")) -
         p.write_text(json.dumps(data, indent=2) + "\n", "utf-8")
         typer.echo(f"  wrote {p}")
 
-    hook = lambda agent: {"hooks": {"Stop": [{"hooks": [  # noqa: E731
+    hook = lambda agent: {"hooks": {"Stop": [{"hooks": [
         {"type": "command", "command": f'"{summon_exe}" hook {agent}', "timeout": 900}]}]}}
-    mcp = lambda agent: {"mcpServers": {"summon": {  # noqa: E731
+    mcp = lambda agent: {"mcpServers": {"summon": {
         "type": "stdio", "command": str(mcp_exe), "args": [],
         "env": {"SUMMON_AGENT": agent, "SUMMON_PROJECT": root.name}, "timeout": 900000}}}
 

@@ -13,6 +13,10 @@ def test_items():
     assert client.get("/items").json()[0]["id"] == "1"
 
 
+def test_items_count():
+    assert client.get("/items/count").json() == {"count": 1}
+
+
 def test_version():
     body = client.get("/version").json()
     assert body["version"] == "0.1.0"

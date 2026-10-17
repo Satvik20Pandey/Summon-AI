@@ -4,13 +4,16 @@ the Cypher is deliberately plain so it can be pasted into FalkorDB Browser."""
 from __future__ import annotations
 
 import json
+import logging
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from falkordb import Graph, Node
 
 from summon.graph.memory import mark_read, now_ts, record_call_decision
+
+log = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------------- helpers
 
@@ -179,7 +182,7 @@ def handoff(g: Graph, project_id: str, me: str) -> dict[str, Any]:
 
     out = {
         "me": me,
-        "since": datetime.utcfromtimestamp(since).isoformat() + "Z" if since else None,
+        "since": datetime.fromtimestamp(since, tz=UTC).isoformat() if since else None,
         "tasks_by_others": [{**to_dict(t), "by_agent": a, "session_started": st}
                             for t, a, st in tasks],
         "decisions": [{**to_dict(d), "call_id": cid, "said_on": at, "while_agent": a}
@@ -344,7 +347,8 @@ def recall(g: Graph, query: str, limit: int = 8) -> list[dict[str, Any]]:
                 f"RETURN node, score LIMIT {limit}",
                 {"q": ft},
             ).result_set
-        except Exception:  # noqa: BLE001 - index may not exist yet on an empty graph
+        except Exception as exc:  # noqa: BLE001 - index may not exist yet on an empty graph
+            log.debug("recall skipped %s: %s", label, exc)
             continue
         for node, score in rows:
             d = to_dict(node)
