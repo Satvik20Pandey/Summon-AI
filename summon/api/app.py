@@ -100,6 +100,7 @@ class CallIn(BaseModel):
     files: list[str] = Field(default_factory=list)
     priority: str = "normal"
     project_path: str = ""
+    instruction_id: str | None = None   # set when this task executes a phoned-in instruction
 
 
 class MockReplyIn(BaseModel):
@@ -189,6 +190,10 @@ async def place_call(body: CallIn) -> dict[str, Any]:
     chunks, questions = condense(body.summary, body.questions)
     mem.record_task(g, body.task_id, body.session_id, body.title, body.summary,
                     files=body.files, questions=questions, priority=body.priority)
+    if body.instruction_id:
+        mem.set_instruction_status(g, body.instruction_id, "done", task_id=body.task_id)
+        events.publish("instruction.done", instruction_id=body.instruction_id,
+                       task_id=body.task_id)
 
     existing = mem.call_for_task(g, body.task_id)
     if existing:

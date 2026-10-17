@@ -38,7 +38,7 @@ def run(project: str, path: str, agent: str = "claude", every: int = 5) -> None:
     if not (root / ".claude" / "settings.json").exists() and not (root / ".codex").exists():
         print(f"{root} is not wired to Summon; run `summon init {root}` first", file=sys.stderr)
         sys.exit(1)
-    print(f"summon daemon: project={project} dir={root} agent={agent}; waiting for phoned-in tasks")
+    print(f"summon daemon: project={project} dir={root} agent={agent}; waiting for phoned-in tasks", flush=True)
     env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
     while True:
         try:
@@ -60,7 +60,7 @@ def run(project: str, path: str, agent: str = "claude", every: int = 5) -> None:
             prompt = (f"The developer phoned in this task (Summon instruction {iid}): {text}\n"
                       "Do it. First call summon_recall if available. When done, summarize in 3 "
                       "lines and ask at most one question.")
-            print(f"▶ running {agent} for instruction {iid}: {text[:80]}")
+            print(f"▶ running {agent} for instruction {iid}: {text[:80]}", flush=True)
             try:
                 subprocess.run(_cmd(agent, prompt), cwd=str(root), env=env, timeout=1800,
                                check=False)
@@ -69,5 +69,5 @@ def run(project: str, path: str, agent: str = "claude", every: int = 5) -> None:
             # the Stop hook recorded the follow-up task and linked it; make sure status moved
             httpx.post(f"{base}/api/instructions/{iid}", headers=headers,
                        json={"status": "done"}, timeout=15)
-            print(f"✔ instruction {iid} finished")
+            print(f"✔ instruction {iid} finished", flush=True)
         time.sleep(every)
