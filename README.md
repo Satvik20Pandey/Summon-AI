@@ -130,9 +130,10 @@ web/                  landing page + Memory Lens (cytoscape graph, provenance pa
 
 ## What was verified
 
-- `uv run pytest`: 15 tests — graph writers and the six queries on a live FalkorDB, flow
+- `uv run pytest`: 23 tests — graph writers and the six queries on a live FalkorDB, flow
   hard rules, signature round-trip and tamper, webhook idempotency through the API, curator
-  heuristics, the whole mock loop over HTTP.
+  heuristics, the whole mock loop over HTTP, the Shravan client contract (offline), and
+  regressions for every bug found in the end-to-end debug pass.
 - Real `claude -p` run in `examples/demo_repo` with the Stop hook: Claude asked *"Should
   /version also include the git commit hash?"*, the call was answered, Claude implemented
   the spoken instruction, and the follow-up Task was linked `EXECUTED_AS` to the Instruction.

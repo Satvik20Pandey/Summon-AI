@@ -26,7 +26,7 @@ def new_id(prefix: str) -> str:
 
 
 def phone_hash(phone: str) -> str:
-    digits = "".join(ch for ch in phone if ch.isdigit())
+    digits = "".join(ch for ch in phone if ch.isdigit())[-10:]
     return hashlib.sha256(("summon:" + digits).encode()).hexdigest()[:24]
 
 

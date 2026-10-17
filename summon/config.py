@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     summon_developer_id: str = "dev"
     summon_developer_name: str = "Developer"
     summon_developer_phone: str = ""
+    summon_timezone: str = "Asia/Kolkata"
 
     # Curator LLM (OpenAI-compatible)
     llm_base_url: str = "https://api.groq.com/openai/v1"

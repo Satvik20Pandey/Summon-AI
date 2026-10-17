@@ -106,8 +106,19 @@ def hook(agent: str = typer.Argument(..., help="claude | codex")) -> None:
     the hook decision so the agent continues with what was said on the phone."""
     from summon.hooks.stop import run_stop_hook
 
-    payload = json.load(sys.stdin) if not sys.stdin.isatty() else {}
-    result = run_stop_hook(agent, payload)
+    # A hook must never crash the agent: bad or empty input means "do nothing".
+    try:
+        raw = "" if sys.stdin.isatty() else sys.stdin.read()
+        payload = json.loads(raw) if raw.strip() else {}
+    except (ValueError, OSError):
+        payload = {}
+    if not payload:
+        return
+    try:
+        result = run_stop_hook(agent, payload)
+    except Exception as exc:  # noqa: BLE001
+        print(f"summon hook error (ignored): {exc}", file=sys.stderr)
+        return
     if result is not None:
         typer.echo(json.dumps(result))
 
@@ -149,7 +160,12 @@ def init(path: str = typer.Argument(".", help="project directory to wire up")) -
         "env": {"SUMMON_AGENT": agent, "SUMMON_PROJECT": root.name}, "timeout": 900000}}}
 
     typer.echo(f"Wiring {root} (project id: {root.name})")
-    write(".claude/settings.json", hook("claude"))
+    claude_settings = hook("claude")
+    # Approve the project MCP server and its tools up front, so `claude -p` runs (and
+    # the inbox daemon) can read Summon memory without an interactive prompt.
+    claude_settings["enableAllProjectMcpServers"] = True
+    claude_settings["permissions"] = {"allow": ["mcp__summon"]}
+    write(".claude/settings.json", claude_settings)
     write(".mcp.json", mcp("claude-code"))
     write(".codex/hooks.json", hook("codex"))
     write(".cursor/mcp.json", mcp("cursor"))

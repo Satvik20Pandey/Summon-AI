@@ -2,7 +2,7 @@
 
 import subprocess
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 GIT_COMMIT = subprocess.run(
     ["git", "rev-parse", "HEAD"], capture_output=True, text=True
@@ -35,4 +35,14 @@ def count_items():
 
 @app.get("/items/{item_id}")
 def get_item(item_id: str):
-    return ITEMS.get(item_id) or {"error": "not found"}
+    item = ITEMS.get(item_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="not found")
+    return item
+
+
+@app.delete("/items/{item_id}")
+def delete_item(item_id: str):
+    if ITEMS.pop(item_id, None) is None:
+        raise HTTPException(status_code=404, detail="not found")
+    return {"deleted": item_id}
