@@ -169,16 +169,24 @@ def extract(transcript: list[dict[str, Any]], question_ids: list[str]) -> Extrac
 _SKIP = {"skip", "skip.", "no", "no.", "nothing", "that's all", "no, that's all.", "nope"}
 
 
-def _topic_from_question(transcript: list[dict[str, Any]], node: str) -> str:
-    """Slug of the question asked at this node, so a later answer to the same question
-    supersedes this decision instead of piling up."""
+_STOP = {"should", "the", "also", "a", "an", "to", "i", "is", "it", "of", "in", "do", "you",
+         "we", "first", "question", "or", "and", "can", "will", "would", "be"}
+
+
+def _question_at(transcript: list[dict[str, Any]], node: str) -> str:
     for t in transcript:
         if t.get("role") == "assistant" and t.get("node_id") == node:
-            words = re.findall(r"[A-Za-z0-9/]+", str(t.get("content", "")).lower())
-            words = [w for w in words if w not in ("should", "the", "also", "a", "an", "to", "i",
-                                                   "is", "it", "of", "in", "do", "you", "we")]
-            return "-".join(words[:4]) or "answer"
-    return "answer"
+            text = re.sub(r"^(first|second|third) question\.\s*", "", str(t.get("content", "")),
+                          flags=re.IGNORECASE)
+            return text.strip()
+    return ""
+
+
+def _topic_from_question(question: str) -> str:
+    """Slug of the question, so a later answer to the same question supersedes this
+    decision instead of piling up."""
+    words = [w for w in re.findall(r"[a-z0-9/]+", question.lower()) if w not in _STOP]
+    return "-".join(words[:4]) or "answer"
 
 
 def _heuristic(transcript: list[dict[str, Any]], question_ids: list[str]) -> Extraction:
@@ -195,8 +203,13 @@ def _heuristic(transcript: list[dict[str, Any]], question_ids: list[str]) -> Ext
             idx = int(m.group(1)) - 1
             if 0 <= idx < len(question_ids):
                 ex.answers.append({"question_id": question_ids[idx], "text": text})
-            if re.search(r"\b(always|never|keep|must|should|from now on)\b", text, re.IGNORECASE):
-                ex.decisions.append({"text": text, "topic": "", "applies_to": ""})
+            # An answer to the agent's question is a project decision: record it with the
+            # question so a later agent can act on it without the transcript.
+            if len(text.split()) >= 2 or text.lower().strip(".!") in ("yes", "yeah", "sure"):
+                question = _question_at(transcript, node)
+                ex.decisions.append({
+                    "text": f"{question} -> {text}" if question else text,
+                    "topic": _topic_from_question(question or text), "applies_to": ""})
         elif node in ("ask_more", "capture_task", "confirm"):
             ex.instructions.append(text)
         qh = re.search(r"(?:before|after)\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)?", text, re.IGNORECASE)

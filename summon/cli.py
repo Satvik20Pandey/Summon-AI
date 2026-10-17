@@ -106,8 +106,19 @@ def hook(agent: str = typer.Argument(..., help="claude | codex")) -> None:
     the hook decision so the agent continues with what was said on the phone."""
     from summon.hooks.stop import run_stop_hook
 
-    payload = json.load(sys.stdin) if not sys.stdin.isatty() else {}
-    result = run_stop_hook(agent, payload)
+    # A hook must never crash the agent: bad or empty input means "do nothing".
+    try:
+        raw = "" if sys.stdin.isatty() else sys.stdin.read()
+        payload = json.loads(raw) if raw.strip() else {}
+    except (ValueError, OSError):
+        payload = {}
+    if not payload:
+        return
+    try:
+        result = run_stop_hook(agent, payload)
+    except Exception as exc:  # noqa: BLE001
+        print(f"summon hook error (ignored): {exc}", file=sys.stderr)
+        return
     if result is not None:
         typer.echo(json.dumps(result))
 

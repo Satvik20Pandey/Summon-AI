@@ -10,6 +10,7 @@ Which agent is talking is set by SUMMON_AGENT in the client's MCP config."""
 
 from __future__ import annotations
 
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -18,6 +19,8 @@ import httpx
 from mcp.server import MCPServer
 
 from summon.config import get_settings
+
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 mcp = MCPServer("summon")
 
@@ -73,6 +76,15 @@ async def summon_recall(project: str = "", query: str = "") -> str:
         out.append(f"- {d['text']}{src} (id {d['id']})")
     if not brief.get("decisions"):
         out.append("- none yet")
+    if brief.get("answers"):
+        out.append("\n## Answers the developer gave on calls")
+        out.extend(f"- Q: {a['question']}  A: {a['answer']} (call {a['call_id']} at {a['said_on']})"
+                   for a in brief["answers"])
+    if brief.get("instruction_history"):
+        out.append("\n## Instructions phoned in earlier")
+        out.extend(f"- [{i.get('status')}] {i['text']} (call {i['call_id']} at {i['said_on']})"
+                   + (f" -> done as: {i['executed_as']}" if i.get("executed_as") else "")
+                   for i in brief["instruction_history"])
     if brief.get("preferences"):
         out.append("\n## Developer preferences")
         out.extend(f"- {p['key']}: {p['value']}" for p in brief["preferences"])

@@ -59,3 +59,28 @@ def test_timeline_ids_unique_when_labels_share_a_name():
         assert all(e["source"] in node_ids and e["target"] in node_ids for e in tl["edges"])
     finally:
         g.delete()
+
+
+def test_hook_never_crashes_on_bad_input():
+    from typer.testing import CliRunner
+
+    from summon.cli import app
+
+    runner = CliRunner()
+    for stdin in ("", "   ", "not json", "[]"):
+        r = runner.invoke(app, ["hook", "claude"], input=stdin)
+        assert r.exit_code == 0, (stdin, r.output)
+        assert r.output.strip() == ""
+
+
+def test_answer_becomes_decision_with_its_question():
+    from summon.curator import extract
+    from summon.voice.base import CallScript
+    from summon.voice.mock import build_transcript
+
+    s = CallScript("Satvik", "Claude Code", "demo", "t", ["done."],
+                   ["Should /version also include the git commit hash?"])
+    ex = extract(build_transcript(s, ["Yes, the short hash."], ""), ["t:q1"])
+    assert ex.decisions[0]["text"] == ("Should /version also include the git commit hash? "
+                                        "-> Yes, the short hash.")
+    assert ex.decisions[0]["topic"] == "/version-include-git-commit"
