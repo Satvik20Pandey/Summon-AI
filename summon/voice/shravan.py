@@ -28,13 +28,17 @@ EVENTS = ["call.completed", "call.analyzed", "call.failed"]
 class ShravanVoice:
     name = "shravan"
 
-    def __init__(self) -> None:
+    def __init__(self, transport: httpx.AsyncBaseTransport | None = None) -> None:
         s = get_settings()
         self.base = s.shravan_base_url.rstrip("/")
         self.key = s.shravan_api_key
         self.agent_id = s.shravan_agent_id
+        self._transport = transport    # tests inject httpx.MockTransport
         if not self.key:
             raise RuntimeError("SHRAVAN_API_KEY is required for SUMMON_VOICE=sandbox|shravan")
+
+    def _client(self, timeout: int = 30) -> httpx.AsyncClient:
+        return httpx.AsyncClient(timeout=timeout, transport=self._transport)
 
     @property
     def livemode(self) -> bool:
@@ -52,7 +56,7 @@ class ShravanVoice:
         """Create (or version) both flows as agents and register the webhook endpoint.
         Returns ids and the signing secret, which the caller stores in its env."""
         out: dict[str, Any] = {}
-        async with httpx.AsyncClient(timeout=30) as c:
+        async with self._client(30) as c:
             for key, flow in (("done", summon_done_flow()), ("inbox", summon_inbox_flow())):
                 problems = validate(flow)
                 if problems:
@@ -87,7 +91,7 @@ class ShravanVoice:
         if not self.livemode:
             body["sandbox_scenario"] = "completed"
             body["sandbox_duration_seconds"] = 20
-        async with httpx.AsyncClient(timeout=30) as c:
+        async with self._client(30) as c:
             r = await c.post(f"{self.base}/calls", headers=self._headers(idem=call_id), json=body)
         if r.status_code >= 400:
             raise RuntimeError(f"provider refused the call: {r.status_code} {r.text[:300]}")
@@ -97,7 +101,7 @@ class ShravanVoice:
 
     async def fetch_result(self, provider_call_id: str) -> dict[str, Any] | None:
         """Poll fallback when a webhook has not arrived."""
-        async with httpx.AsyncClient(timeout=20) as c:
+        async with self._client(20) as c:
             r = await c.get(f"{self.base}/calls/{provider_call_id}", headers=self._headers())
             if r.status_code != 200:
                 return None
