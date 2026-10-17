@@ -23,6 +23,7 @@ dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff>=0.5"]
 
 [project.scripts]
 summon = "summon.cli:app"
+summon-mcp = "summon.mcp_server:main"
 
 [build-system]
 requires = ["hatchling"]

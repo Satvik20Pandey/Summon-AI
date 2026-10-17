@@ -197,8 +197,8 @@ def provenance(g: Graph, node_id: str) -> dict[str, Any] | None:
     path_rows = g.ro_query(
         """
         MATCH (n {id: $id}), (d:Developer)
-        WITH n, d
-        MATCH p = shortestPath((n)-[*..4]-(d))
+        WITH shortestPath((n)-[*..4]->(d)) AS p
+        WHERE p IS NOT NULL
         RETURN [x IN nodes(p) | coalesce(x.id, x.path, x.name)] LIMIT 1
         """,
         {"id": node_id},
