@@ -24,7 +24,8 @@ from summon.config import get_settings
 def _cmd(agent: str, instruction: str) -> list[str]:
     if agent == "codex":
         exe = shutil.which("codex") or "codex"
-        return [exe, "exec", "--full-auto", instruction]
+        return [exe, "exec", "--approve-for-me",
+                "--skip-git-repo-check", instruction]
     exe = shutil.which("claude") or "claude"
     return [exe, "-p", instruction, "--permission-mode", "acceptEdits", "--max-turns", "25",
             "--output-format", "text"]

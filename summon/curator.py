@@ -169,6 +169,18 @@ def extract(transcript: list[dict[str, Any]], question_ids: list[str]) -> Extrac
 _SKIP = {"skip", "skip.", "no", "no.", "nothing", "that's all", "no, that's all.", "nope"}
 
 
+def _topic_from_question(transcript: list[dict[str, Any]], node: str) -> str:
+    """Slug of the question asked at this node, so a later answer to the same question
+    supersedes this decision instead of piling up."""
+    for t in transcript:
+        if t.get("role") == "assistant" and t.get("node_id") == node:
+            words = re.findall(r"[A-Za-z0-9/]+", str(t.get("content", "")).lower())
+            words = [w for w in words if w not in ("should", "the", "also", "a", "an", "to", "i",
+                                                   "is", "it", "of", "in", "do", "you", "we")]
+            return "-".join(words[:4]) or "answer"
+    return "answer"
+
+
 def _heuristic(transcript: list[dict[str, Any]], question_ids: list[str]) -> Extraction:
     """No LLM: map user turns by the node they were spoken at (mock + sandbox shape)."""
     ex = Extraction()

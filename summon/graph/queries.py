@@ -91,6 +91,25 @@ def brief(g: Graph, project_id: str, agent: str | None = None) -> dict[str, Any]
         """,
         {"pid": project_id},
     ).result_set
+    answered = g.ro_query(
+        """
+        MATCH (t:Task)-[:IN]->(:Session)-[:ON]->(:Project {id: $pid}),
+              (t)-[:RAISED]->(q:Question)<-[:TO]-(a:Answer)-[:SAID_IN]->(c:Call)
+        RETURN q.text, a.text, c.id, c.at, t.title
+        ORDER BY a.ts DESC LIMIT 10
+        """,
+        {"pid": project_id},
+    ).result_set
+    history = g.ro_query(
+        """
+        MATCH (i:Instruction)-[:FOR]->(:Project {id: $pid}), (i)-[:GIVEN_IN]->(c:Call)
+        WHERE i.status <> 'pending'
+        OPTIONAL MATCH (i)-[:EXECUTED_AS]->(t:Task)
+        RETURN i, c.id, c.at, t.title
+        ORDER BY i.ts DESC LIMIT 10
+        """,
+        {"pid": project_id},
+    ).result_set
 
     out = {
         "project": project_id,
@@ -100,6 +119,10 @@ def brief(g: Graph, project_id: str, agent: str | None = None) -> dict[str, Any]
         "preferences": [{**to_dict(p), "call_id": cid, "said_on": at} for p, cid, at in prefs],
         "pending_instructions": [{**to_dict(i), "call_id": cid, "said_on": at}
                                  for i, cid, at in pending],
+        "answers": [{"question": qt, "answer": at_, "call_id": cid, "said_on": at, "task": title}
+                    for qt, at_, cid, at, title in answered],
+        "instruction_history": [{**to_dict(i), "call_id": cid, "said_on": at, "executed_as": title}
+                                for i, cid, at, title in history],
     }
     if agent:
         ids = [x["id"] for x in out["decisions"] + out["preferences"] + out["recent_tasks"]
