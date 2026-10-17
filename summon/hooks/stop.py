@@ -125,11 +125,16 @@ def run_stop_hook(agent_cli: str, payload: dict[str, Any]) -> dict[str, Any] | N
         return None
 
     task_id = "task-" + hashlib.sha1((session_id + message).encode()).hexdigest()[:10]
+    # The daemon leaves the phoned-in instruction this run is executing in state.json.
+    executing = (state.get("pending_instructions") or [None])[0]
     body = {
         "project": project, "agent": agent, "session_id": session_id, "task_id": task_id,
         "title": _title(message), "summary": message[:6000], "questions": _questions(message),
-        "files": _files(message), "project_path": cwd,
+        "files": _files(message), "project_path": cwd, "instruction_id": executing,
     }
+    if executing:
+        state["pending_instructions"] = (state.get("pending_instructions") or [])[1:]
+        _save_state(cwd, state)
     try:
         r = httpx.post(f"{base}/api/calls", headers=headers, json=body, timeout=60)
     except httpx.HTTPError as exc:

@@ -7,18 +7,18 @@ from __future__ import annotations
 import hashlib
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from falkordb import Graph
 
 
 def now_ts() -> int:
-    return int(datetime.now(timezone.utc).timestamp())
+    return int(datetime.now(UTC).timestamp())
 
 
 def iso(ts: int | None = None) -> str:
-    return datetime.fromtimestamp(ts or now_ts(), tz=timezone.utc).isoformat(timespec="seconds")
+    return datetime.fromtimestamp(ts or now_ts(), tz=UTC).isoformat(timespec="seconds")
 
 
 def new_id(prefix: str) -> str:

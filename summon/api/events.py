@@ -51,7 +51,7 @@ async def wait_for_call(call_id: str, timeout: float) -> bool:
     try:
         await asyncio.wait_for(ev.wait(), timeout)
         return True
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return False
     finally:
         ev.clear()
