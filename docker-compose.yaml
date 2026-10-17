@@ -1,0 +1,53 @@
+# Summon AI: FalkorDB + API/UI. Deployed on Coolify as a Docker Compose resource.
+# No custom `networks:` block (Coolify attaches its proxy network). Domain + TLS are
+# set in the Coolify Domains UI: https://summon.shravan-ai.tech:8000
+services:
+  falkordb:
+    image: falkordb/falkordb:latest
+    restart: unless-stopped
+    environment:
+      REDIS_ARGS: "--requirepass ${FALKORDB_PASSWORD:?set FALKORDB_PASSWORD} --appendonly yes --dir /data"
+    volumes:
+      - summon_falkordb_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$${FALKORDB_PASSWORD}\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  summon-api:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "8000"
+    environment:
+      FALKORDB_HOST: falkordb
+      FALKORDB_PORT: "6379"
+      FALKORDB_PASSWORD: "${FALKORDB_PASSWORD}"
+      SUMMON_API_URL: "${SUMMON_API_URL:-https://summon.shravan-ai.tech}"
+      SUMMON_API_TOKEN: "${SUMMON_API_TOKEN:?set SUMMON_API_TOKEN}"
+      SUMMON_VOICE: "${SUMMON_VOICE:-mock}"
+      SUMMON_DEVELOPER_ID: "${SUMMON_DEVELOPER_ID:-dev}"
+      SUMMON_DEVELOPER_NAME: "${SUMMON_DEVELOPER_NAME:-Developer}"
+      SUMMON_DEVELOPER_PHONE: "${SUMMON_DEVELOPER_PHONE:-}"
+      LLM_BASE_URL: "${LLM_BASE_URL:-https://api.groq.com/openai/v1}"
+      LLM_API_KEY: "${LLM_API_KEY:-}"
+      LLM_MODEL: "${LLM_MODEL:-openai/gpt-oss-120b}"
+      SHRAVAN_BASE_URL: "${SHRAVAN_BASE_URL:-https://api.shravan-ai.tech/v1}"
+      SHRAVAN_API_KEY: "${SHRAVAN_API_KEY:-}"
+      SHRAVAN_AGENT_ID: "${SHRAVAN_AGENT_ID:-}"
+      SHRAVAN_WEBHOOK_SECRET: "${SHRAVAN_WEBHOOK_SECRET:-}"
+    depends_on:
+      falkordb:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+volumes:
+  summon_falkordb_data:

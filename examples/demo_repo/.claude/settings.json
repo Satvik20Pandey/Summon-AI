@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"C:\\Users\\WiJungle\\Desktop\\Personal\\Graph Hacks- Hackathon\\summon-ai\\.venv\\Scripts\\summon.exe\" hook claude",
+            "timeout": 900
+          }
+        ]
+      }
+    ]
+  }
+}

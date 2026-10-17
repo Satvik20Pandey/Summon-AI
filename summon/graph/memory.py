@@ -322,6 +322,50 @@ def record_decision(g: Graph, call_id: str, text: str, topic: str = "",
     return did
 
 
+def record_agent_note(g: Graph, agent: str, session_id: str, text: str, kind: str = "decision",
+                      topic: str = "", applies_to: str = "", project_id: str | None = None) -> str:
+    """A fact an agent chose to remember itself (summon_remember). Provenance is the
+    agent + session instead of a call; the same SUPERSEDES rule applies."""
+    did = new_id("dec" if kind == "decision" else "note")
+    ts = now_ts()
+    topic = topic or _slug(text)
+    g.query(
+        """
+        MERGE (a:Agent {name: $agent})
+        MERGE (s:Session {id: $sid})
+        ON CREATE SET s.started_ts = $ts, s.started_at = $iso
+        MERGE (s)-[:RUN_BY]->(a)
+        CREATE (d:Decision {id: $did, text: $text, topic: $topic, applies_to: $applies,
+                            kind: $kind, source: 'agent', since_ts: $ts, since: $iso})
+        CREATE (d)-[:WRITTEN_BY]->(a)
+        CREATE (d)-[:IN_SESSION]->(s)
+        """,
+        {"agent": agent, "sid": session_id, "did": did, "text": text, "topic": topic,
+         "applies": applies_to, "kind": kind, "ts": ts, "iso": iso(ts)},
+    )
+    if project_id:
+        upsert_project(g, project_id)
+        g.query(
+            """
+            MATCH (d:Decision {id: $did}), (p:Project {id: $pid})
+            MERGE (d)-[:APPLIES_TO]->(p)
+            """,
+            {"did": did, "pid": project_id},
+        )
+        g.query(
+            """
+            MATCH (old:Decision {topic: $topic})-[:APPLIES_TO]->(p:Project {id: $pid})
+            WHERE old.id <> $did AND old.until_ts IS NULL
+            SET old.until_ts = $ts, old.until = $iso
+            WITH old
+            MATCH (d:Decision {id: $did})
+            MERGE (d)-[:SUPERSEDES]->(old)
+            """,
+            {"did": did, "pid": project_id, "topic": topic, "ts": ts, "iso": iso(ts)},
+        )
+    return did
+
+
 def record_preference(g: Graph, call_id: str, developer_id: str, key: str, value: str) -> str:
     pid = new_id("pref")
     ts = now_ts()

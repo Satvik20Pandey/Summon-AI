@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summon AI</title>
+<meta name="description" content="Your coding agents share one memory in FalkorDB, and every decision traces back to you, by phone.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<div class="wrap">
+  <nav class="nav">
+    <a class="brand" href="/"><span class="dot"></span>Summon AI</a>
+    <div class="links">
+      <a href="/lens">Memory Lens</a>
+      <a href="https://github.com/Satvik20Pandey/summon-ai">GitHub</a>
+      <a href="https://www.wemakedevs.org/hackathons/falkordb">Graph Hacks</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="pill">Built on FalkorDB · Graph Hacks 2026 · Track 02 Agent Memory &amp; Coordination · Track 01</div>
+    <h1>Your coding agents <span>call you</span>.<br>And they <span>remember</span>.</h1>
+    <p>When Claude Code or Codex finishes a task, Summon phones you, asks its open question and takes your spoken instruction. The agent continues with what you said. Any other agent, in a fresh session, finds that decision in FalkorDB together with the call it came from.</p>
+    <a class="btn" href="/lens">Open the Memory Lens</a>
+    <a class="btn ghost" href="https://github.com/Satvik20Pandey/summon-ai#run-it-locally-in-5-minutes-no-accounts-needed">Run it in 5 minutes</a>
+  </section>
+
+  <div class="flow"><pre>Claude Code finishes a task ──► Summon calls you ──► "Keep the API backward-compatible"
+        │                                                      │
+        │  Stop hook feeds your words back to the agent        ▼
+        ▼                                     (:Instruction)-[:GIVEN_IN]->(:Call)   (:Decision)-[:MADE_IN]->(:Call)
+Claude continues with the instruction                          │
+                                                               ▼
+Fresh Codex session ──► summon_recall(project) ──► Decision + "said on the call at 14:32" ──► respects it</pre></div>
+
+  <h2>Three things no agent memory does today</h2>
+  <p class="sub">Each one is a graph query, not a feature flag.</p>
+  <div class="grid">
+    <div class="card"><div class="k">📞</div><h3>Decisions made by phone become nodes</h3><p>Answers, instructions, decisions and preferences you say on the call are written to FalkorDB with an edge to that exact call. Nothing is a flat transcript.</p></div>
+    <div class="card"><div class="k">🔁</div><h3>One memory for every agent</h3><p>Claude Code, Codex and Cursor read the same graph through one MCP server. <code>handoff()</code> tells an agent what the others did since its last session, and records that it read it.</p></div>
+    <div class="card"><div class="k">🧭</div><h3>Every answer has a path back to you</h3><p><code>provenance()</code> walks Decision → Call → Developer: who was running, when you said it, what it replaced, and which agents have consumed it since.</p></div>
+  </div>
+
+  <h2>The graph decides whether to call</h2>
+  <p class="sub">Track 01: acting on connected data. Quiet hours you mentioned on a previous call, calls in the last hour and the task's priority are read from the graph; the decision is written back as a <code>CallDecision</code> node with its reason, so the Lens can show why your phone did or did not ring.</p>
+
+  <h2>How it is wired</h2>
+  <div class="grid">
+    <div class="card"><h3>Stop hooks</h3><p>Claude Code and Codex run <code>summon hook</code> when they finish. It phones you, waits, and returns <code>{"decision":"block","reason":"…your words…"}</code>, which makes the agent continue with your instruction.</p></div>
+    <div class="card"><h3>MCP tools</h3><p><code>summon_recall</code>, <code>summon_remember</code>, <code>summon_done</code>, <code>summon_inbox</code>. Same server for every agent; <code>SUMMON_AGENT</code> says who is asking.</p></div>
+    <div class="card"><h3>Voice provider</h3><p>Calls go through the public developer API of Shravan.ai (<code>POST /v1/calls</code> + signed webhooks). <code>SUMMON_VOICE=mock</code> runs the whole loop with no telephony at all.</p></div>
+  </div>
+
+  <h2>Tracks</h2>
+  <p class="sub"><span class="tag t2">Track 02</span> Agent Memory and Coordination: memory that persists, updates (supersession, never overwrite), and is shared by every agent. <span class="tag t1">Track 01</span> Agents That Act on Connected Data: the call/retry/skip policy and multi-hop provenance.</p>
+
+  <div class="footer">Summon AI · MIT · built during Graph Hacks, Oct 15–18 2026, with Claude Code (disclosed) · voice by Shravan.ai's public API · graph by FalkorDB</div>
+</div>
+</body>
+</html>

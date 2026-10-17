@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Hooks and the MCP server run with the agent's project as cwd, which has no .env.
+# ~/.summon/.env (written by `summon init`) tells them where the API is; a local
+# .env, when present, wins.
+GLOBAL_ENV = Path.home() / ".summon" / ".env"
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(env_file=(str(GLOBAL_ENV), ".env"),
+                                      env_file_encoding="utf-8", extra="ignore")
 
     # FalkorDB
     falkordb_host: str = "localhost"

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Summon Memory Lens</title>
+<meta name="description" content="Live view of the FalkorDB memory shared by your coding agents: tasks, calls, decisions and their provenance.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/styles.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
+</head>
+<body>
+<div class="topbar">
+  <a class="brand" href="/"><span class="dot"></span>Summon <span style="color:var(--muted);font-weight:500">/ Memory Lens</span></a>
+  <div class="right">
+    <span id="conn">connecting…</span>
+    <span id="stats"></span>
+    <button class="btn ghost" id="refresh">Reload graph</button>
+  </div>
+</div>
+<div class="lens">
+  <div id="cy"></div>
+  <div class="side">
+    <div class="panel" id="phone">
+      <h4>📞 Incoming call (mock mode)</h4>
+      <div id="phone-lines"></div>
+      <div id="phone-form"></div>
+    </div>
+    <div class="panel" id="prov">
+      <h4>Provenance</h4>
+      <div class="legend">
+        <span><i style="background:var(--dev)"></i>Developer</span>
+        <span><i style="background:var(--agent)"></i>Agent</span>
+        <span><i style="background:var(--task)"></i>Task</span>
+        <span><i style="background:var(--call)"></i>Call</span>
+        <span><i style="background:var(--decision)"></i>Decision</span>
+        <span><i style="background:var(--instruction)"></i>Instruction</span>
+        <span><i style="background:var(--pref)"></i>Preference</span>
+      </div>
+      <p class="sub" style="font-size:13px;margin-top:10px">Click a decision, instruction or preference to see which call it came from, who was running, and which agents have read it.</p>
+      <div id="prov-body"></div>
+    </div>
+    <div class="panel" id="timeline"><h4>Live timeline</h4><div id="events"></div></div>
+  </div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
