@@ -31,13 +31,14 @@
     const seen = new Set();
     const els = [];
     for (const n of data.nodes) {
-      if (seen.has(n.key)) continue;
-      seen.add(n.key);
-      els.push({ data: { id: n.key, label: label(n), type: n.label, raw: n } });
+      const uid = n.uid || n.label + ":" + n.key;
+      if (seen.has(uid)) continue;
+      seen.add(uid);
+      els.push({ data: { id: uid, key: n.key, label: label(n), type: n.label, raw: n } });
     }
     for (const e of data.edges) {
       if (!seen.has(e.source) || !seen.has(e.target)) continue;
-      els.push({ data: { id: e.source + "|" + e.type + "|" + e.target, source: e.source, target: e.target, label: e.type } });
+      els.push({ data: { id: e.id || e.source + "|" + e.type + "|" + e.target, source: e.source, target: e.target, label: e.type } });
     }
     if (cy) cy.destroy();
     cy = cytoscape({
@@ -82,15 +83,15 @@
     if (p.supersedes) rows.push(`<div class="row"><b>replaced</b>“${p.supersedes.text}”</div>`);
     if (p.read_by && p.read_by.length) rows.push(`<div class="row"><b>read by</b>${p.read_by.map((r) => `${r.agent} (${(r.at || "").slice(0, 16).replace("T", " ")})`).join(", ")}</div>`);
     if (p.path_to_developer && p.path_to_developer.length) rows.push(`<div class="row"><b>path</b><code>${p.path_to_developer.join(" → ")}</code></div>`);
-    if (n.label === "Call" && n.transcript) rows.push(`<div class="row"><b>transcript</b><pre style="white-space:pre-wrap;font-size:11px">${n.transcript.map((t) => (t.role === "user" ? "👤 " : "🤖 ") + t.content).join("\n")}</pre></div>`);
+    if (n.label === "Call" && Array.isArray(n.transcript)) rows.push(`<div class="row"><b>transcript</b><pre style="white-space:pre-wrap;font-size:11px">${n.transcript.map((t) => (t.role === "user" ? "👤 " : "🤖 ") + t.content).join("\n")}</pre></div>`);
     body.innerHTML = rows.join("");
     if (cy) {
       cy.elements().removeClass("hl dim");
       const ids = new Set(p.path_to_developer || []);
       ids.add(n.id);
       cy.elements().addClass("dim");
-      cy.nodes().filter((x) => ids.has(x.id())).removeClass("dim").addClass("hl");
-      cy.edges().filter((e) => ids.has(e.source().id()) && ids.has(e.target().id())).removeClass("dim").addClass("hl");
+      cy.nodes().filter((x) => ids.has(x.data("key"))).removeClass("dim").addClass("hl");
+      cy.edges().filter((e) => ids.has(e.source().data("key")) && ids.has(e.target().data("key"))).removeClass("dim").addClass("hl");
     }
   }
 

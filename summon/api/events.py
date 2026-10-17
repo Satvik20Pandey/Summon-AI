@@ -40,7 +40,7 @@ async def subscribe():
     try:
         while True:
             evt = await q.get()
-            yield f"data: {json.dumps(evt, ensure_ascii=False)}\n\n"
+            yield {"data": json.dumps(evt, ensure_ascii=False)}
     finally:
         _subscribers.discard(q)
 

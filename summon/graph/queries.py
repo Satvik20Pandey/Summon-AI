@@ -278,7 +278,7 @@ def should_call(g: Graph, developer_id: str, task_id: str, *, now: int | None = 
     prio = g.ro_query("MATCH (t:Task {id: $tid}) RETURN t.priority", {"tid": task_id}).result_set
     priority = (prio[0][0] if prio and prio[0][0] else "normal")
 
-    hhmm = local_hhmm or datetime.now().strftime("%H:%M")
+    hhmm = local_hhmm or _local_hhmm()
     in_quiet = _in_window(hhmm, quiet_from, quiet_to)
     inputs = {
         "local_time": hhmm, "quiet_hours": f"{quiet_from}-{quiet_to}" if quiet_from else None,
@@ -296,6 +296,18 @@ def should_call(g: Graph, developer_id: str, task_id: str, *, now: int | None = 
         action, reason, retry = "call", "no quiet hours, under the hourly cap, no recent misses", 0
     record_call_decision(g, task_id, action, reason, inputs)
     return {"action": action, "reason": reason, "retry_in_s": retry, "inputs": inputs}
+
+
+def _local_hhmm() -> str:
+    from zoneinfo import ZoneInfo
+
+    from summon.config import get_settings
+
+    try:
+        tz = ZoneInfo(get_settings().summon_timezone)
+    except Exception:  # noqa: BLE001 - unknown zone: fall back to server time
+        tz = None
+    return datetime.now(tz).strftime("%H:%M")
 
 
 def _in_window(hhmm: str, start: str, end: str) -> bool:
@@ -368,14 +380,23 @@ def timeline(g: Graph, limit: int = 400) -> dict[str, Any]:
     edges = g.ro_query(
         f"MATCH (a)-[r]->(b) WHERE NOT a:Event RETURN a, type(r), b, r LIMIT {limit * 3}"
     ).result_set
+    def uid(n: Node) -> str:
+        return f"{n.labels[0] if n.labels else 'Node'}:{node_key(n)}"
+
     out_nodes = []
     for (n,) in nodes:
         d = to_dict(n)
-        d.pop("transcript", None)
         d.pop("script", None)
+        d["uid"] = uid(n)
         out_nodes.append(d)
-    out_edges = [{"source": node_key(a), "type": t, "target": node_key(b),
-                  **{k: v for k, v in r.properties.items()}} for a, t, b, r in edges]
+    out_edges, seen = [], set()
+    for a, t, b, r in edges:
+        eid = f"{uid(a)}|{t}|{uid(b)}"
+        if eid in seen:
+            continue
+        seen.add(eid)
+        out_edges.append({"id": eid, "source": uid(a), "type": t, "target": uid(b),
+                          **dict(r.properties)})
     return {"nodes": out_nodes, "edges": out_edges}
 
 
