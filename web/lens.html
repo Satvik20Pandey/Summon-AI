@@ -1,50 +1,107 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Summon Memory Lens</title>
-<meta name="description" content="Live view of the FalkorDB memory shared by your coding agents: tasks, calls, decisions and their provenance.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/styles.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.30.2/cytoscape.min.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Memory Lens — Summon AI</title>
+  <meta name="description" content="Live view of the FalkorDB memory your coding agents share: tasks, calls, decisions, and the path from every decision back to you.">
+  <meta name="theme-color" content="#000000">
+  <meta name="author" content="Satvik Pandey">
+  <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/doto-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css?v=3">
+  <link rel="stylesheet" href="/static/css/summon.css?v=3">
+  <script defer src="/static/vendor/cytoscape-3.30.2.min.js"></script>
+  <script defer src="/static/js/common.js?v=3"></script>
+  <script defer src="/static/js/lens.js?v=3"></script>
 </head>
-<body>
-<div class="topbar">
-  <a class="brand" href="/"><span class="dot"></span>Summon <span style="color:var(--muted);font-weight:500">/ Memory Lens</span></a>
+<body class="lens-page">
+
+<header class="lens-top">
+  <a class="brand" href="/" aria-label="Summon AI home"><img src="/static/img/logo.svg" alt="" width="34" height="34"> Summon</a>
+  <span class="lens-title">Memory Lens</span>
+  <label class="lens-search">
+    <span class="sr-only">Search memory</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="search" type="search" placeholder="Search decisions, instructions, tasks…" autocomplete="off">
+  </label>
   <div class="right">
-    <span>Made by Satvik Pandey</span>
-    <span id="conn">connecting…</span>
-    <span id="stats"></span>
-    <button class="btn ghost" id="refresh">Reload graph</button>
+    <span class="conn" id="conn"><span class="dot-live off" id="conn-dot"></span><span id="conn-text">Connecting…</span></span>
+    <span class="chip" id="voice-chip" title="Voice provider">voice: …</span>
+    <span class="made">Made by <b>Satvik Pandey</b></span>
+    <a class="small-btn" href="/">Home</a>
   </div>
-</div>
-<div class="lens">
-  <div id="cy"></div>
-  <div class="side">
-    <div class="panel" id="phone">
-      <h4>📞 Incoming call (mock mode)</h4>
-      <div id="phone-lines"></div>
-      <div id="phone-form"></div>
-    </div>
-    <div class="panel" id="prov">
-      <h4>Provenance</h4>
-      <div class="legend">
-        <span><i style="background:var(--dev)"></i>Developer</span>
-        <span><i style="background:var(--agent)"></i>Agent</span>
-        <span><i style="background:var(--task)"></i>Task</span>
-        <span><i style="background:var(--call)"></i>Call</span>
-        <span><i style="background:var(--decision)"></i>Decision</span>
-        <span><i style="background:var(--instruction)"></i>Instruction</span>
-        <span><i style="background:var(--pref)"></i>Preference</span>
+</header>
+
+<main class="lens-main">
+  <section class="graph-panel" aria-label="Memory graph">
+    <div class="graph-hud">
+      <div class="filters" id="filters" aria-label="Node types"></div>
+      <div class="zoom">
+        <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+        <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+        <button type="button" id="zoom-fit" aria-label="Fit graph">⤢</button>
       </div>
-      <p class="sub" style="font-size:13px;margin-top:10px">Click a decision, instruction or preference to see which call it came from, who was running, and which agents have read it.</p>
-      <div id="prov-body"></div>
     </div>
-    <div class="panel" id="timeline"><h4>Live timeline</h4><div id="events"></div></div>
-  </div>
-</div>
-<script src="/static/app.js"></script>
+    <div class="cy-wrap">
+    <div id="cy" role="img" aria-label="Graph of tasks, calls, decisions and agents"></div>
+    <div class="empty hidden" id="empty">
+      <div>
+        <h3>No memories yet.</h3>
+        <p>Finish a task in a wired project and Summon will call you. Or seed a sample memory:</p>
+        <code>uv run summon demo-seed</code>
+      </div>
+    </div>
+    <div class="tooltip hidden" id="tooltip"></div>
+    </div>
+  </section>
+
+  <aside class="side" aria-label="Details">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="tab-call" aria-selected="true" aria-controls="panel-call">Call <span class="badge hidden" id="call-badge">1</span></button>
+      <button type="button" role="tab" id="tab-prov" aria-selected="false" aria-controls="panel-prov">Provenance</button>
+      <button type="button" role="tab" id="tab-feed" aria-selected="false" aria-controls="panel-feed">Timeline</button>
+    </div>
+
+    <div class="tab-panel call-host" role="tabpanel" id="panel-call" aria-labelledby="tab-call">
+      <div class="call-card" id="call-card">
+        <div class="call-top">
+          <span class="call-tag"><b>●</b>&nbsp; <span id="call-tag-text">NO CALL</span></span>
+          <div class="pills"><span class="pill-toggle is-on hidden" id="call-agent"></span><span class="pill-toggle hidden" id="call-project"></span></div>
+        </div>
+        <div class="speakers">
+          <div id="sp-agent" class="speaker agent">
+            <div class="speaker-name"><span class="avatar">S</span> Summon</div>
+            <div class="speaker-state" id="st-agent">Idle</div>
+            <div class="wave" id="wv-agent"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+          <div id="sp-caller" class="speaker caller">
+            <div class="speaker-name"><span class="avatar">Y</span> You</div>
+            <div class="speaker-state" id="st-caller">—</div>
+            <div class="wave" id="wv-caller"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="transcript" id="transcript" aria-live="polite"></div>
+        <form class="answer-form hidden" id="answer-form" autocomplete="off"></form>
+        <div class="call-actions" id="call-actions">
+          <button class="play-btn dark" type="button" id="call-btn" disabled><span>Waiting for an agent to finish…</span></button>
+        </div>
+        <div class="call-note" id="call-note">When an agent finishes, Summon rings here (mock mode) or on your phone.</div>
+      </div>
+    </div>
+
+    <div class="tab-panel hidden" role="tabpanel" id="panel-prov" aria-labelledby="tab-prov">
+      <div class="pad-in" id="prov-body">
+        <p class="panel-h">Provenance</p>
+        <p class="hint">Click a decision, instruction, preference or call in the graph to see which call it came from, which agent was running, what it replaced, and which agents have read it since. Or search above.</p>
+      </div>
+    </div>
+
+    <div class="tab-panel hidden" role="tabpanel" id="panel-feed" aria-labelledby="tab-feed">
+      <div class="feed" id="feed"><p class="hint" id="feed-empty" style="margin:4px 2px">Live events from agents, calls and the curator appear here.</p></div>
+    </div>
+  </aside>
+</main>
 </body>
 </html>
