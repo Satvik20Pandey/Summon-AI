@@ -1,63 +1,299 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Summon AI</title>
-<meta name="description" content="Your coding agents share one memory in FalkorDB, and every decision traces back to you, by phone.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Summon AI — your coding agents call you, and remember</title>
+  <meta name="description" content="When Claude Code or Codex finishes a task, Summon phones you, takes your spoken instruction, and stores every decision in a FalkorDB graph that every agent shares. Part of the Shravan.ai ecosystem. Made by Satvik Pandey.">
+  <meta name="theme-color" content="#000000">
+  <meta name="author" content="Satvik Pandey">
+  <meta property="og:title" content="Summon AI — your coding agents call you, and remember">
+  <meta property="og:description" content="Phone-in-the-loop for coding agents, with one shared memory in FalkorDB.">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="/static/img/logo.svg">
+  <link rel="preload" href="/static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/doto-700-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css?v=3">
+  <link rel="stylesheet" href="/static/css/summon.css?v=3">
+  <script defer src="/static/js/common.js?v=3"></script>
+  <script defer src="/static/js/landing.js?v=3"></script>
 </head>
-<body>
-<div class="wrap">
-  <nav class="nav">
-    <a class="brand" href="/"><span class="dot"></span>Summon AI</a>
-    <div class="links">
-      <a href="/lens">Memory Lens</a>
-      <a href="https://github.com/Satvik20Pandey/Summon-AI">GitHub</a>
-      <a href="https://www.wemakedevs.org/hackathons/falkordb">Graph Hacks</a>
+<body id="top">
+
+<!-- ═══ Header ═════════════════════════════════════════════════════════════ -->
+<header class="hdr" id="hdr">
+  <div class="hdr-row">
+    <a href="/" class="logo-btn" aria-label="Summon AI home"><img src="/static/img/logo.svg" alt="" width="48" height="48"></a>
+    <nav class="nav-pill" aria-label="Primary">
+      <a href="#top" class="nav-link active">Home</a>
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="#graph" class="nav-link">Graph</a>
+      <a href="#agents" class="nav-link opt">Agents</a>
+      <a href="https://github.com/Satvik20Pandey/Summon-AI" class="nav-link opt" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </nav>
+    <a class="pill-dark" href="/lens">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="10" cy="18" r="2.5"/><path d="M8.2 7.1 15.6 7.6M7.2 8.2l2 7.4M16.6 10.1l-4.8 6.2"/></svg>
+      <span class="lbl">Memory Lens</span>
+    </a>
+  </div>
+</header>
+
+<!-- ═══ Hero ═══════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="bg" aria-hidden="true"><canvas id="signal-field"></canvas></div>
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <div class="status-pill anim" style="--d:.05s">
+        <span class="dot-live"></span>
+        <span>Part of the <b>Shravan.ai</b> ecosystem</span><span class="pill-more">· built on <b>FalkorDB</b></span>
+      </div>
+      <h1 class="headline">
+        <span>Your agents</span>
+        <span>call you.</span>
+        <span>And remember.</span>
+      </h1>
+      <p class="subhead anim" style="--d:.5s">
+        When Claude Code or Codex finishes a task, Summon phones you, asks its open question and
+        takes your spoken instruction. The agent carries on with what you said, and every agent
+        after it finds that decision in one shared graph, with the call it came from.
+      </p>
+      <div class="cta-row anim" style="--d:.62s">
+        <a class="btn-white" href="/lens">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="8" r="2.5"/><circle cx="10" cy="18" r="2.5"/><path d="M8.2 7.1 15.6 7.6M7.2 8.2l2 7.4M16.6 10.1l-4.8 6.2"/></svg>
+          Open the Memory Lens
+        </a>
+        <a class="btn-ghost" href="#run">
+          Run it in 5 minutes
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l6-5-6-5M12 19h8"/></svg>
+        </a>
+      </div>
     </div>
-  </nav>
 
-  <section class="hero">
-    <div class="pill">Built on FalkorDB · Graph Hacks 2026 · Track 02 Agent Memory &amp; Coordination · Track 01</div>
-    <h1>Your coding agents <span>call you</span>.<br>And they <span>remember</span>.</h1>
-    <p>When Claude Code or Codex finishes a task, Summon phones you, asks its open question and takes your spoken instruction. The agent continues with what you said. Any other agent, in a fresh session, finds that decision in FalkorDB together with the call it came from.</p>
-    <a class="btn" href="/lens">Open the Memory Lens</a>
-    <a class="btn ghost" href="https://github.com/Satvik20Pandey/Summon-AI#run-it-locally-in-5-minutes-no-accounts-needed">Run it in 5 minutes</a>
-  </section>
-
-  <div class="flow"><pre>Claude Code finishes a task ──► Summon calls you ──► "Keep the API backward-compatible"
-        │                                                      │
-        │  Stop hook feeds your words back to the agent        ▼
-        ▼                                     (:Instruction)-[:GIVEN_IN]->(:Call)   (:Decision)-[:MADE_IN]->(:Call)
-Claude continues with the instruction                          │
-                                                               ▼
-Fresh Codex session ──► summon_recall(project) ──► Decision + "said on the call at 14:32" ──► respects it</pre></div>
-
-  <h2>Three things no agent memory does today</h2>
-  <p class="sub">Each one is a graph query, not a feature flag.</p>
-  <div class="grid">
-    <div class="card"><div class="k">📞</div><h3>Decisions made by phone become nodes</h3><p>Answers, instructions, decisions and preferences you say on the call are written to FalkorDB with an edge to that exact call. Nothing is a flat transcript.</p></div>
-    <div class="card"><div class="k">🔁</div><h3>One memory for every agent</h3><p>Claude Code, Codex and Cursor read the same graph through one MCP server. <code>handoff()</code> tells an agent what the others did since its last session, and records that it read it.</p></div>
-    <div class="card"><div class="k">🧭</div><h3>Every answer has a path back to you</h3><p><code>provenance()</code> walks Decision → Call → Developer: who was running, when you said it, what it replaced, and which agents have consumed it since.</p></div>
+    <!-- Replays the most recent real call stored in the graph (or a sample if none). -->
+    <div id="call-card" class="call-card anim" style="--d:.42s" aria-label="Call replay">
+      <div class="call-top">
+        <span class="call-tag"><b>●</b>&nbsp; <span id="call-tag-text">LAST CALL</span></span>
+        <div class="pills" id="call-pills">
+          <span class="pill-toggle is-on" id="pill-agent">Claude Code</span>
+          <span class="pill-toggle" id="pill-project">demo-api</span>
+        </div>
+      </div>
+      <div class="speakers">
+        <div id="sp-agent" class="speaker agent">
+          <div class="speaker-name"><span class="avatar">S</span> Summon</div>
+          <div class="speaker-state" id="st-agent">Ready</div>
+          <div class="wave" id="wv-agent"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div id="sp-caller" class="speaker caller">
+          <div class="speaker-name"><span class="avatar" id="caller-initial">Y</span> <span id="caller-name">You</span></div>
+          <div class="speaker-state" id="st-caller">On your phone</div>
+          <div class="wave" id="wv-caller"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        </div>
+      </div>
+      <div id="transcript" class="transcript" aria-live="polite"></div>
+      <div class="call-actions">
+        <button id="replay-btn" class="play-btn" type="button">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>
+          <span>Replay the call</span>
+        </button>
+      </div>
+      <div class="call-note" id="call-note">Every answer lands in FalkorDB as a node linked to this call.</div>
+    </div>
   </div>
 
-  <h2>The graph decides whether to call</h2>
-  <p class="sub">Track 01: acting on connected data. Quiet hours you mentioned on a previous call, calls in the last hour and the task's priority are read from the graph; the decision is written back as a <code>CallDecision</code> node with its reason, so the Lens can show why your phone did or did not ring.</p>
-
-  <h2>How it is wired</h2>
-  <div class="grid">
-    <div class="card"><h3>Stop hooks</h3><p>Claude Code and Codex run <code>summon hook</code> when they finish. It phones you, waits, and returns <code>{"decision":"block","reason":"…your words…"}</code>, which makes the agent continue with your instruction.</p></div>
-    <div class="card"><h3>MCP tools</h3><p><code>summon_recall</code>, <code>summon_remember</code>, <code>summon_done</code>, <code>summon_inbox</code>. Same server for every agent; <code>SUMMON_AGENT</code> says who is asking.</p></div>
-    <div class="card"><h3>Voice provider</h3><p>Calls go through the public developer API of Shravan.ai (<code>POST /v1/calls</code> + signed webhooks). <code>SUMMON_VOICE=mock</code> runs the whole loop with no telephony at all.</p></div>
+  <div class="stats" aria-label="Live memory">
+    <div class="stat anim" style="--d:.7s"><div class="glyph">#</div><div class="val" data-stat="Decision">—</div><div class="lbl">Decisions remembered</div></div>
+    <div class="stat anim" style="--d:.78s"><div class="glyph">~</div><div class="val" data-stat="Call">—</div><div class="lbl">Calls in the graph</div></div>
+    <div class="stat anim" style="--d:.86s"><div class="glyph">&gt;</div><div class="val" data-stat="Instruction">—</div><div class="lbl">Spoken instructions</div></div>
+    <div class="stat anim" style="--d:.94s"><div class="glyph">+</div><div class="val" data-stat="Agent">—</div><div class="lbl">Agents sharing memory</div></div>
   </div>
+</section>
 
-  <h2>Tracks</h2>
-  <p class="sub"><span class="tag t2">Track 02</span> Agent Memory and Coordination: memory that persists, updates (supersession, never overwrite), and is shared by every agent. <span class="tag t1">Track 01</span> Agents That Act on Connected Data: the call/retry/skip policy and multi-hop provenance.</p>
+<!-- ═══ Ecosystem ══════════════════════════════════════════════════════════ -->
+<section class="ecosystem" aria-label="Built with">
+  <div class="wrap">
+    <div class="eco-row">
+      <span class="eco-item"><span class="glyph">*</span> FalkorDB</span>
+      <span class="eco-item"><span class="glyph">~</span> Shravan.ai voice</span>
+      <span class="eco-item"><span class="glyph">&gt;</span> Claude Code</span>
+      <span class="eco-item"><span class="glyph">&gt;</span> OpenAI Codex</span>
+      <span class="eco-item"><span class="glyph">=</span> Model Context Protocol</span>
+    </div>
+    <p class="eco-kicker">One memory, any agent, any phone</p>
+  </div>
+</section>
 
-  <div class="footer">Made by <b>Satvik Pandey</b> · Summon AI · MIT · built during Graph Hacks, Oct 15–18 2026 · voice by Shravan.ai's public API · graph by FalkorDB</div>
-</div>
+<!-- ═══ How it works ═══════════════════════════════════════════════════════ -->
+<section id="how" class="section">
+  <div class="wrap">
+    <p class="eyebrow reveal center" style="margin-bottom:14px">How it works</p>
+    <h2 class="section-title reveal" style="--d:.05s">A phone line for your agents,<br><em>a memory for all of them.</em></h2>
+
+    <div class="pipeline reveal" style="--d:.1s">
+      <div class="pipe"><div class="glyph">1</div><h4>Finish</h4><p>Claude Code or Codex stops. Its Stop hook hands Summon the summary and its open questions.</p><span class="arrow">›</span></div>
+      <div class="pipe"><div class="glyph">2</div><h4>Call</h4><p>The graph decides whether to ring now. Your phone rings; Summon reads the summary and asks.</p><span class="arrow">›</span></div>
+      <div class="pipe"><div class="glyph">3</div><h4>Decide</h4><p>Your answers and instructions become nodes linked to that exact call, never a flat transcript.</p><span class="arrow">›</span></div>
+      <div class="pipe"><div class="glyph">4</div><h4>Remember</h4><p>The agent continues with your words. Every later agent reads them, with the path back to you.</p></div>
+    </div>
+
+    <div class="cards">
+      <div class="card pad reveal" style="--d:.05s">
+        <div class="blob blob-l"></div>
+        <div class="card-in">
+          <h3>Say it once,<br>on the phone.</h3>
+          <p class="mid">"Keep the old route backward compatible." That sentence becomes a <b>Decision</b> node, linked to the call, the task and the agent that was running. Change your mind later and the new decision supersedes it, history intact.</p>
+          <div class="chip-row" style="margin-top:auto">
+            <span class="chip"><i style="background:var(--live)"></i>Decision</span>
+            <span class="chip"><i style="background:var(--blue)"></i>Call</span>
+            <span class="chip"><i style="background:var(--amber)"></i>Instruction</span>
+          </div>
+        </div>
+      </div>
+      <div class="card media-card reveal" style="--d:.12s;display:flex;flex-direction:column">
+        <div class="card-media"><canvas id="mini-graph" aria-hidden="true"></canvas></div>
+        <div class="card-caption">
+          <h3>One memory for<br>every agent.</h3>
+          <p>Claude Code, Codex and Cursor read the same graph through one MCP server.</p>
+        </div>
+      </div>
+      <div class="card pad reveal" style="--d:.19s">
+        <div class="blob blob-r"></div>
+        <div class="card-in">
+          <h3>Every answer has<br>a path back to you.</h3>
+          <p class="bottom">Ask any agent why it did something and it can show you: Decision → Call → you, with the time you said it, what it replaced, and which agents have read it since.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ The graph decides ═══════════════════════════════════════════════════ -->
+<section id="graph" class="section">
+  <div class="wrap">
+    <div class="split">
+      <div class="reveal">
+        <p class="eyebrow">Track 01 · agents that act on connected data</p>
+        <h2>The graph decides<br><em>when your phone rings.</em></h2>
+        <p class="lead">Quiet hours you mentioned on an earlier call, how many calls you missed this hour, and how urgent the task is are all read from FalkorDB. The decision is written back as a node, so you can always see why your phone did, or did not, ring.</p>
+        <ul class="bullets">
+          <li>"Don't call me before 9" becomes a Preference, learned on a call</li>
+          <li>Two missed calls in an hour back the agent off for 30 minutes</li>
+          <li>A hard cap stops a runaway agent from draining your wallet</li>
+        </ul>
+      </div>
+      <div class="console reveal" style="--d:.1s">
+        <div class="console-bar"><div class="dots"><i></i><i></i><i></i></div><span class="title">CALL DECISION</span></div>
+        <div class="console-body">
+          <dl class="kv" id="policy-kv">
+            <dt>Local time</dt><dd>23:40 IST</dd>
+            <dt>Quiet hours</dt><dd>22:00 – 09:00 · learned on a call</dd>
+            <dt>Calls this hour</dt><dd>1 of 6</dd>
+            <dt>Missed this hour</dt><dd>0</dd>
+            <dt>Task priority</dt><dd>normal</dd>
+          </dl>
+          <div class="verdict retry" id="policy-verdict">
+            <span class="act">RETRY_IN</span>
+            <span class="why">quiet hours 22:00–09:00 · will ring at 09:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Cypher ═══════════════════════════════════════════════════════════════ -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="split">
+      <div class="console reveal">
+        <div class="console-bar"><div class="dots"><i></i><i></i><i></i></div><span class="title">PROVENANCE · CYPHER</span></div>
+<pre class="code"><span class="c">// where did this rule come from?</span>
+<span class="k">MATCH</span> (n {id: <span class="p">$id</span>})
+<span class="k">OPTIONAL MATCH</span> (n)-[:<span class="r">MADE_IN</span>|<span class="r">GIVEN_IN</span>|<span class="r">LEARNED_IN</span>]->(c:<span class="l">Call</span>)
+<span class="k">OPTIONAL MATCH</span> (c)-[:<span class="r">ABOUT</span>]->(t:<span class="l">Task</span>)
+      -[:<span class="r">IN</span>]->(:<span class="l">Session</span>)-[:<span class="r">RUN_BY</span>]->(a:<span class="l">Agent</span>)
+<span class="k">OPTIONAL MATCH</span> (n)-[:<span class="r">SUPERSEDES</span>]->(old)
+<span class="k">RETURN</span> n, c.at, t.title, a.name, old
+
+<span class="c">// what did the other agents do while I was away?</span>
+<span class="k">MATCH</span> (t:<span class="l">Task</span>)-[:<span class="r">IN</span>]->(s:<span class="l">Session</span>)-[:<span class="r">RUN_BY</span>]->(a:<span class="l">Agent</span>)
+<span class="k">WHERE</span> a.name &lt;&gt; <span class="p">$me</span> <span class="k">AND</span> t.done_ts &gt;= <span class="p">$since</span>
+<span class="k">RETURN</span> t, a.name</pre>
+      </div>
+      <div class="reveal" style="--d:.1s">
+        <p class="eyebrow">Track 02 · agent memory and coordination</p>
+        <h2>Memory as a graph,<br><em>not a pile of transcripts.</em></h2>
+        <p class="lead">Provenance is a path. Handoff is a relationship between sessions. A changed mind is a <code>SUPERSEDES</code> edge. These are one-hop and three-hop questions in Cypher, answered in milliseconds by FalkorDB on every agent turn.</p>
+        <ul class="bullets">
+          <li>One graph per developer, isolated in a single FalkorDB instance</li>
+          <li>Webhook retries can't duplicate a fact: every write is a MERGE</li>
+          <li>Full-text recall across decisions, instructions and tasks</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Agents ════════════════════════════════════════════════════════════════ -->
+<section id="agents" class="section" style="padding-top:0">
+  <div class="wrap">
+    <p class="eyebrow reveal center" style="margin-bottom:14px">Works with</p>
+    <h2 class="section-title reveal" style="--d:.05s">Wire an agent in one command.<br><em>Talk to it from any phone.</em></h2>
+    <div class="rows">
+      <div class="row reveal" style="--d:.03s"><div class="glyph">&gt;</div><div><h4>Claude Code</h4><p>Stop hook in <code>.claude/settings.json</code> · memory over MCP in <code>.mcp.json</code></p></div><span class="status">Verified end to end</span></div>
+      <div class="row reveal" style="--d:.06s"><div class="glyph">&gt;</div><div><h4>OpenAI Codex CLI</h4><p>Stop hook in <code>.codex/hooks.json</code> · <code>codex mcp add summon</code></p></div><span class="status">Verified end to end</span></div>
+      <div class="row reveal" style="--d:.09s"><div class="glyph">&gt;</div><div><h4>Cursor</h4><p><code>.cursor/mcp.json</code> · stop hook returns a <code>followup_message</code></p></div><span class="status soon">Supported</span></div>
+      <div class="row reveal" style="--d:.12s"><div class="glyph">~</div><div><h4>Shravan.ai voice</h4><p>Real calls on an Indian number through the public <code>/v1/calls</code> API · signed webhooks</p></div><span class="status">Voice provider</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Built right ══════════════════════════════════════════════════════════ -->
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="trust-grid">
+      <div class="trust reveal" style="--d:.03s"><div class="glyph">|</div><h4>Phone in the loop</h4><p>Your spoken words become the agent's next instruction through its own Stop hook. No new app to install.</p><a href="#how">See the loop ›</a></div>
+      <div class="trust reveal" style="--d:.09s"><div class="glyph">#</div><h4>Signed and idempotent</h4><p>HMAC-verified webhooks, one event one write, and a poll fallback when a webhook goes missing.</p><a href="https://github.com/Satvik20Pandey/Summon-AI/blob/main/docs/CYPHER.md" target="_blank" rel="noopener noreferrer">See the Cypher ›</a></div>
+      <div class="trust reveal" style="--d:.12s"><div class="glyph">=</div><h4>Private by default</h4><p>Phone numbers are stored hashed. Unknown callers are rejected. The inbox runs only in the folder you choose.</p><a href="https://github.com/Satvik20Pandey/Summon-AI#disclosure" target="_blank" rel="noopener noreferrer">Read more ›</a></div>
+      <div class="trust reveal" style="--d:.15s"><div class="glyph">+</div><h4>Runs with zero accounts</h4><p>Mock voice mode answers the "call" in the Lens, so anyone can try the whole loop locally in minutes.</p><a href="#run">Run it ›</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ Run it ═══════════════════════════════════════════════════════════════ -->
+<section id="run" class="section" style="padding-top:0">
+  <div class="wrap">
+    <div class="contact-band reveal">
+      <h2>Give your agents a phone line.</h2>
+      <p>Clone it, point it at FalkorDB, and wire any project. Mock mode needs no telephony account; switch to Shravan.ai for real calls.</p>
+      <div class="cta-row">
+        <a class="btn-white" href="https://github.com/Satvik20Pandey/Summon-AI" target="_blank" rel="noopener noreferrer">Get it on GitHub</a>
+        <a class="btn-ghost" href="/lens">Open the Memory Lens</a>
+      </div>
+      <div class="term" id="term"><span>$</span><code id="term-cmd">uv run summon init . &amp;&amp; uv run summon serve</code><button class="copy-btn" type="button" id="copy-cmd">Copy</button></div>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><img src="/static/img/logo.svg" alt=""> Summon AI</a>
+        <p>Your coding agents call you.<br>And they remember.</p>
+        <a class="maker" href="https://github.com/Satvik20Pandey" target="_blank" rel="noopener noreferrer">Made by Satvik Pandey</a>
+      </div>
+      <nav class="foot-links" aria-label="Footer">
+        <div><h3>Product</h3><a href="#how">How it works</a><a href="#graph">The graph</a><a href="#agents">Agents</a><a href="/lens">Memory Lens</a></div>
+        <div><h3>Build</h3><a href="https://github.com/Satvik20Pandey/Summon-AI" target="_blank" rel="noopener noreferrer">GitHub</a><a href="https://github.com/Satvik20Pandey/Summon-AI/blob/main/docs/GRAPH_MODEL.md" target="_blank" rel="noopener noreferrer">Graph model</a><a href="https://github.com/Satvik20Pandey/Summon-AI/blob/main/docs/CYPHER.md" target="_blank" rel="noopener noreferrer">Cypher</a></div>
+        <div><h3>Ecosystem</h3><a href="https://shravan-ai.tech" target="_blank" rel="noopener noreferrer">Shravan.ai</a><a href="https://www.falkordb.com" target="_blank" rel="noopener noreferrer">FalkorDB</a><a href="https://www.wemakedevs.org/hackathons/falkordb" target="_blank" rel="noopener noreferrer">Graph Hacks</a></div>
+      </nav>
+    </div>
+    <div class="foot-bottom">
+      <p class="fine">© 2026 Summon AI · Made by Satvik Pandey · Part of the Shravan.ai ecosystem · MIT</p>
+      <p class="foot-status"><span aria-hidden="true"></span><span id="foot-status-text">Memory online</span></p>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

@@ -401,7 +401,8 @@ async def _redial_later(call_id: str, delay_s: int) -> None:
 
 @app.get("/api/mock/pending")
 async def mock_pending() -> dict[str, Any]:
-    return {"pending": [{"call_id": cid, "lines": s.spoken_lines(), "questions": s.questions}
+    return {"pending": [{"call_id": cid, "lines": s.spoken_lines(), "questions": s.questions,
+                         "bot": s.bot, "project": s.project, "developer": s.developer_name}
                         for cid, s in mockvoice.PENDING.items()]}
 
 
@@ -529,6 +530,28 @@ async def memory_stats() -> dict[str, Any]:
     return {"labels": qry.stats(graph()), "developer": dev_id()}
 
 
+@app.get("/api/calls")
+async def recent_calls(limit: int = Query(5, ge=1, le=50)) -> dict[str, Any]:
+    """Latest analyzed calls with their transcript and the facts they produced."""
+    g = graph()
+    rows = g.ro_query(
+        """
+        MATCH (c:Call) WHERE c.status = 'analyzed'
+        OPTIONAL MATCH (c)-[:ABOUT]->(t:Task)-[:IN]->(:Session)-[:RUN_BY]->(a:Agent)
+        OPTIONAL MATCH (t)-[:IN]->(:Session)-[:ON]->(p:Project)
+        RETURN c.id, t.title, a.name, p.id
+        ORDER BY coalesce(c.analyzed_ts, c.ts) DESC, c.ts DESC LIMIT $n
+        """,
+        {"n": limit},
+    ).result_set
+    calls = []
+    for cid, title, agent, project in rows:
+        view = _call_view(g, mem.get_call(g, cid))
+        view.update({"task_title": title, "agent": agent, "project": project})
+        calls.append(view)
+    return {"calls": calls}
+
+
 @app.get("/api/inbox")
 async def inbox(project: str | None = None) -> dict[str, Any]:
     return {"pending": qry.inbox(graph(), project)}
@@ -555,12 +578,16 @@ async def recent_events(n: int = 50) -> dict[str, Any]:
 
 
 if WEB.exists():
+    # HTML is revalidated on every load so a deploy is visible immediately; the
+    # assets it references carry a ?v= version and can be cached.
+    _NO_CACHE = {"Cache-Control": "no-cache"}
+
     @app.get("/")
     async def index() -> FileResponse:
-        return FileResponse(WEB / "index.html")
+        return FileResponse(WEB / "index.html", headers=_NO_CACHE)
 
     @app.get("/lens")
     async def lens() -> FileResponse:
-        return FileResponse(WEB / "lens.html")
+        return FileResponse(WEB / "lens.html", headers=_NO_CACHE)
 
     app.mount("/static", StaticFiles(directory=str(WEB)), name="static")
