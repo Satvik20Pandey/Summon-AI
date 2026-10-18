@@ -310,6 +310,11 @@ async def finalize_call(call_id: str, resource: dict[str, Any]) -> dict[str, Any
         return _call_view(g, mem.get_call(g, call_id))
 
     transcript = resource.get("transcript") or []
+    # Shravan's sandbox answers with a canned transcript: keep it, but label it so the
+    # landing page never replays it as if it were a real conversation.
+    sandbox = backend().name == "shravan" and resource.get("livemode") is False
+    if sandbox:
+        mem.update_call(g, call_id, sandbox=True)
     script = call.get("script")
     if isinstance(script, str):
         try:
@@ -531,18 +536,21 @@ async def memory_stats() -> dict[str, Any]:
 
 
 @app.get("/api/calls")
-async def recent_calls(limit: int = Query(5, ge=1, le=50)) -> dict[str, Any]:
-    """Latest analyzed calls with their transcript and the facts they produced."""
+async def recent_calls(limit: int = Query(5, ge=1, le=50),
+                       include_sandbox: bool = False) -> dict[str, Any]:
+    """Latest analyzed calls with their transcript and the facts they produced.
+    Sandbox (canned) calls are left out unless asked for."""
     g = graph()
     rows = g.ro_query(
         """
         MATCH (c:Call) WHERE c.status = 'analyzed'
+          AND ($sb OR coalesce(c.sandbox, false) = false)
         OPTIONAL MATCH (c)-[:ABOUT]->(t:Task)-[:IN]->(:Session)-[:RUN_BY]->(a:Agent)
         OPTIONAL MATCH (t)-[:IN]->(:Session)-[:ON]->(p:Project)
         RETURN c.id, t.title, a.name, p.id
         ORDER BY coalesce(c.analyzed_ts, c.ts) DESC, c.ts DESC LIMIT $n
         """,
-        {"n": limit},
+        {"n": limit, "sb": include_sandbox},
     ).result_set
     calls = []
     for cid, title, agent, project in rows:

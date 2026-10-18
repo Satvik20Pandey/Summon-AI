@@ -150,3 +150,22 @@ def test_recent_calls_and_pending_fields(client):
     assert mine, [c["id"] for c in calls]
     assert mine[0]["agent"] == "codex" and mine[0]["project"] == "demo"
     assert mine[0]["transcript"] and mine[0]["decisions"]
+
+
+def test_sandbox_calls_hidden_from_replay(client):
+    from summon.api import app as appmod
+    from summon.graph import memory as mem
+
+    g = appmod.graph()
+    client.post("/api/sessions", json={"agent": "codex", "project": "demo",
+                                       "session_id": "s-sb"}, headers=H)
+    r = client.post("/api/calls", json={
+        "project": "demo", "agent": "codex", "session_id": "s-sb", "task_id": "t-sb",
+        "title": "Sandbox task", "summary": "x", "questions": []}, headers=H)
+    cid = r.json()["call_id"]
+    client.post("/api/mock/reply", json={"call_id": cid, "answers": [], "more": ""})
+    mem.update_call(g, cid, sandbox=True)
+    ids = [c["id"] for c in client.get("/api/calls", params={"limit": 50}).json()["calls"]]
+    assert cid not in ids
+    ids = [c["id"] for c in client.get("/api/calls", params={"limit": 50, "include_sandbox": True}).json()["calls"]]
+    assert cid in ids

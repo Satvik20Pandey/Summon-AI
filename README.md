@@ -76,7 +76,7 @@ Wire a project (the demo repo is included):
 uv run summon init examples/demo_repo    # writes .claude/settings.json (Stop hook), .mcp.json,
                                          # .codex/hooks.json, .cursor/mcp.json, ~/.summon/.env
 cd examples/demo_repo
-claude "add a /version route, then ask me one question"
+claude "add a PUT /items/{item_id} route that renames an item, add a test, then ask me one question"
 ```
 
 When Claude stops, the Memory Lens rings (**Incoming call**): type your answer and an

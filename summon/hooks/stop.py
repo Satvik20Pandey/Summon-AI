@@ -71,7 +71,9 @@ def _project_id(cwd: str) -> str:
 def _title(message: str) -> str:
     """First sentence of the agent's final message, without markdown or a leading
     "Done —"; underscores stay because they are usually code identifiers."""
-    first = next((ln.strip(" #*-") for ln in message.splitlines() if ln.strip()), "Task")
+    lines = [ln.strip(" #*-") for ln in message.splitlines() if ln.strip()]
+    real = [ln for ln in lines if not re.match(r"^(one\s+)?(note|nb|ps|p\.s\.|caveat|fyi)\b", ln, re.IGNORECASE)]
+    first = (real or lines or ["Task"])[0]
     first = re.sub(r"[`*]", "", first)
     first = re.sub(r"^(all\s+)?done\s*[—–:\-.,]*\s*", "", first, flags=re.IGNORECASE) or first
     first = re.split(r"(?<=[.!?])\s", first, maxsplit=1)[0]
