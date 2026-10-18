@@ -111,3 +111,11 @@ def test_title_keeps_identifiers():
 
     assert _title("All done — 3 tests passed.") == "3 tests passed."
     assert _title("Fixed summon_recall. More text here.") == "Fixed summon_recall."
+
+
+def test_title_skips_note_lines():
+    from summon.hooks.stop import _title
+
+    msg = "Note: the summon_recall call required a permission.\n\nAdded /items/search. All 9 tests pass."
+    assert _title(msg) == "Added /items/search."
+    assert _title("One note: nothing else.\n") == "nothing else."

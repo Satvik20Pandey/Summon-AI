@@ -393,7 +393,7 @@
         : "Live mode: Summon calls your phone through Shravan.ai.";
       return;
     }
-    $("call-tag-text").textContent = call.direction === "inbound" ? "YOU CALLED IN" : "LAST CALL";
+    $("call-tag-text").textContent = call.sandbox ? "SANDBOX CALL" : call.direction === "inbound" ? "YOU CALLED IN" : "LAST CALL";
     callPills(call.agent, call.project);
     (call.transcript || []).forEach((t) => turn(t.role, t.content));
     (call.decisions || []).forEach((d) => factLine("Decision saved", d.text));
