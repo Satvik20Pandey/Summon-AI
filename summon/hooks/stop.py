@@ -69,8 +69,12 @@ def _project_id(cwd: str) -> str:
 
 
 def _title(message: str) -> str:
+    """First sentence of the agent's final message, without markdown or a leading
+    "Done —"; underscores stay because they are usually code identifiers."""
     first = next((ln.strip(" #*-") for ln in message.splitlines() if ln.strip()), "Task")
-    first = re.sub(r"[`*_]", "", first)
+    first = re.sub(r"[`*]", "", first)
+    first = re.sub(r"^(all\s+)?done\s*[—–:\-.,]*\s*", "", first, flags=re.IGNORECASE) or first
+    first = re.split(r"(?<=[.!?])\s", first, maxsplit=1)[0]
     return (first[:77] + "...") if len(first) > 80 else first
 
 
@@ -204,6 +208,30 @@ def run_stop_hook(agent_cli: str, payload: dict[str, Any]) -> dict[str, Any] | N
     if answers or decisions:
         return _context(agent_cli, "The developer answered Summon's call. "
                         + " ".join(answers) + (" Decisions: " + "; ".join(decisions) if decisions else ""))
+    return None
+
+
+def run_cursor_stop_hook(payload: dict[str, Any]) -> dict[str, Any] | None:
+    """Cursor's ``stop`` hook speaks a different dialect: it sends ``status``,
+    ``loop_count``, ``conversation_id`` and ``workspace_roots`` (no final message), and
+    continues the agent when the hook returns ``{"followup_message": ...}``."""
+    if payload.get("status") not in (None, "completed"):
+        return None
+    if int(payload.get("loop_count") or 0) > 0:
+        # Cursor re-fires stop after a follow-up; treat it like stop_hook_active.
+        payload = {**payload, "stop_hook_active": True}
+    roots = payload.get("workspace_roots") or []
+    normalized = {
+        "cwd": payload.get("cwd") or (roots[0] if roots else os.getcwd()),
+        "session_id": payload.get("conversation_id") or payload.get("session_id") or "cursor",
+        "stop_hook_active": payload.get("stop_hook_active", False),
+        "last_assistant_message": payload.get("last_assistant_message")
+        or "Cursor finished the task it was working on in this workspace. "
+           "Review the changes in the editor.",
+    }
+    result = run_stop_hook("cursor", normalized)
+    if result and result.get("decision") == "block":
+        return {"followup_message": result["reason"]}
     return None
 
 

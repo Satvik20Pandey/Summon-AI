@@ -115,7 +115,12 @@ def hook(agent: str = typer.Argument(..., help="claude | codex")) -> None:
     if not payload:
         return
     try:
-        result = run_stop_hook(agent, payload)
+        if agent == "cursor":
+            from summon.hooks.stop import run_cursor_stop_hook
+
+            result = run_cursor_stop_hook(payload)
+        else:
+            result = run_stop_hook(agent, payload)
     except Exception as exc:  # noqa: BLE001
         print(f"summon hook error (ignored): {exc}", file=sys.stderr)
         return
@@ -169,6 +174,8 @@ def init(path: str = typer.Argument(".", help="project directory to wire up")) -
     write(".mcp.json", mcp("claude-code"))
     write(".codex/hooks.json", hook("codex"))
     write(".cursor/mcp.json", mcp("cursor"))
+    write(".cursor/hooks.json", {"version": 1, "hooks": {"stop": [
+        {"command": f'"{summon_exe}" hook cursor'}]}})
     typer.echo("\nCodex MCP is user-level; add this to ~/.codex/config.toml:\n")
     typer.echo("[mcp_servers.summon]\n"
                f'command = "{str(mcp_exe).replace(chr(92), "/")}"\nargs = []\n'
@@ -194,6 +201,23 @@ def demo_seed(project: str = "demo-api") -> None:
 
     seed(project)
     typer.echo(f"seeded demo memory for project {project}")
+
+
+@app.command("demo-reset")
+def demo_reset(project: str = "demo-api",
+               yes: bool = typer.Option(False, "--yes", help="skip the confirmation")) -> None:
+    """Delete this developer's graph and re-seed the demo memory (for recording)."""
+    from summon.demo import seed
+    from summon.graph.schema import _ensured, get_db, graph_name
+
+    name = graph_name(get_settings().summon_developer_id)
+    if not yes and not typer.confirm(f"Delete graph {name} and re-seed?"):
+        raise typer.Exit(1)
+    if name in get_db().list_graphs():
+        get_db().select_graph(name).delete()
+    _ensured.discard(name)
+    seed(project)
+    typer.echo(f"graph {name} reset and seeded for project {project}")
 
 
 @app.command()

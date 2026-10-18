@@ -133,3 +133,20 @@ def test_webhook_signature_and_idempotency(client, monkeypatch):
     v = client.get(f"/api/calls/{call_id}").json()
     assert v["status"] == "analyzed"
     assert len(v["instructions"]) == 1 and len(v["answers"]) == 1
+
+
+def test_recent_calls_and_pending_fields(client):
+    client.post("/api/sessions", json={"agent": "codex", "project": "demo",
+                                       "session_id": "s-rc"}, headers=H)
+    r = client.post("/api/calls", json={
+        "project": "demo", "agent": "codex", "session_id": "s-rc", "task_id": "t-rc",
+        "title": "Recent call task", "summary": "Did it.", "questions": ["Ship?"]}, headers=H)
+    cid = r.json()["call_id"]
+    pend = [p for p in client.get("/api/mock/pending").json()["pending"] if p["call_id"] == cid]
+    assert pend and pend[0]["bot"] == "Codex" and pend[0]["project"] == "demo"
+    client.post("/api/mock/reply", json={"call_id": cid, "answers": ["Yes ship it"], "more": ""})
+    calls = client.get("/api/calls", params={"limit": 10}).json()["calls"]
+    mine = [c for c in calls if c["id"] == cid]   # several calls can share a second
+    assert mine, [c["id"] for c in calls]
+    assert mine[0]["agent"] == "codex" and mine[0]["project"] == "demo"
+    assert mine[0]["transcript"] and mine[0]["decisions"]

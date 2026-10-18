@@ -84,3 +84,30 @@ def test_answer_becomes_decision_with_its_question():
     assert ex.decisions[0]["text"] == ("Should /version also include the git commit hash? "
                                         "-> Yes, the short hash.")
     assert ex.decisions[0]["topic"] == "/version-include-git-commit"
+
+
+def test_cursor_stop_hook_dialect(monkeypatch):
+    from summon.hooks import stop
+
+    seen = {}
+
+    def fake(agent, payload):
+        seen.update(agent=agent, payload=payload)
+        return {"decision": "block", "reason": "Do the next thing."}
+
+    monkeypatch.setattr(stop, "run_stop_hook", fake)
+    out = stop.run_cursor_stop_hook({"status": "completed", "loop_count": 0,
+                                     "conversation_id": "c1", "workspace_roots": ["/w/proj"]})
+    assert out == {"followup_message": "Do the next thing."}
+    assert seen["agent"] == "cursor" and seen["payload"]["cwd"] == "/w/proj"
+    assert seen["payload"]["session_id"] == "c1" and not seen["payload"]["stop_hook_active"]
+    stop.run_cursor_stop_hook({"status": "completed", "loop_count": 1, "conversation_id": "c1"})
+    assert seen["payload"]["stop_hook_active"] is True
+    assert stop.run_cursor_stop_hook({"status": "aborted"}) is None
+
+
+def test_title_keeps_identifiers():
+    from summon.hooks.stop import _title
+
+    assert _title("All done — 3 tests passed.") == "3 tests passed."
+    assert _title("Fixed summon_recall. More text here.") == "Fixed summon_recall."
