@@ -10,7 +10,7 @@ Connected Data.
 
 **Repository:** https://github.com/Satvik20Pandey/Summon-AI
 
-**Live demo:** https://summon.shravan-ai.tech (Memory Lens at `/lens`)
+**Live demo:** https://summon.shravan-ai.tech (Memory Lens at `/lens`) — mirror: https://summon.77-42-70-237.sslip.io
 
 **Demo video:** _(paste link)_
 

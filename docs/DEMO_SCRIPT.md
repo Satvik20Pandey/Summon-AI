@@ -7,7 +7,7 @@ Record at 1440×900, browser zoom 100%, dark desktop. English subtitles througho
 
 ```bash
 uv run summon demo-reset --yes          # clean graph + yesterday's memory
-uv run summon serve                     # or use https://summon.shravan-ai.tech
+uv run summon serve                     # or use https://summon.shravan-ai.tech (mirror: https://summon.77-42-70-237.sslip.io)
 ```
 
 - Open three windows side by side: **terminal with Claude Code** in `examples/demo_repo`,
