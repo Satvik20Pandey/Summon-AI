@@ -1,0 +1,33 @@
+# Override for a host that already runs Coolify's Traefik proxy (the Shravan.ai box):
+# join the `coolify` network and publish https://summon.shravan-ai.tech, plus an
+# sslip.io name that resolves without any DNS record (handy before the A record exists).
+#
+#   docker compose -f docker-compose.yaml -f docker-compose.hetzner.yaml up -d --build
+services:
+  summon-api:
+    networks: [default, coolify]
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: coolify
+      traefik.http.middlewares.summon-redirect.redirectscheme.scheme: https
+      traefik.http.middlewares.summon-gzip.compress: "true"
+      traefik.http.services.summon.loadbalancer.server.port: "8000"
+      traefik.http.routers.summon-http.entryPoints: http
+      traefik.http.routers.summon-http.rule: Host(`summon.shravan-ai.tech`) || Host(`summon.77-42-70-237.sslip.io`)
+      traefik.http.routers.summon-http.middlewares: summon-redirect
+      traefik.http.routers.summon-http.service: summon
+      traefik.http.routers.summon-https.entryPoints: https
+      traefik.http.routers.summon-https.rule: Host(`summon.shravan-ai.tech`)
+      traefik.http.routers.summon-https.tls: "true"
+      traefik.http.routers.summon-https.tls.certresolver: letsencrypt
+      traefik.http.routers.summon-https.middlewares: summon-gzip
+      traefik.http.routers.summon-https.service: summon
+      traefik.http.routers.summon-ip.entryPoints: https
+      traefik.http.routers.summon-ip.rule: Host(`summon.77-42-70-237.sslip.io`)
+      traefik.http.routers.summon-ip.tls: "true"
+      traefik.http.routers.summon-ip.tls.certresolver: letsencrypt
+      traefik.http.routers.summon-ip.middlewares: summon-gzip
+      traefik.http.routers.summon-ip.service: summon
+networks:
+  coolify:
+    external: true

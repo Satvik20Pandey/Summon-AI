@@ -14,7 +14,8 @@ FalkorDB), Oct 15–18, 2026.
 **Tracks entered: 02 Agent Memory and Coordination** (primary) and **01 Agents That Act on
 Connected Data**.
 
-- Live: https://summon.shravan-ai.tech (Memory Lens at `/lens`)
+- Live: https://summon.shravan-ai.tech (Memory Lens at `/lens`) · mirror that needs no DNS:
+  https://summon.77-42-70-237.sslip.io
 - Demo video: _(link added at submission)_
 - Graph model: [docs/GRAPH_MODEL.md](docs/GRAPH_MODEL.md) · Cypher: [docs/CYPHER.md](docs/CYPHER.md) ·
   Deploy: [docs/DEPLOY.md](docs/DEPLOY.md)
