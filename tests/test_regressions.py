@@ -118,4 +118,5 @@ def test_title_skips_note_lines():
 
     msg = "Note: the summon_recall call required a permission.\n\nAdded /items/search. All 9 tests pass."
     assert _title(msg) == "Added /items/search."
-    assert _title("One note: nothing else.\n") == "nothing else."
+    # a message that is only a note keeps it rather than producing an empty title
+    assert _title("One note: nothing else.\n") == "One note: nothing else."

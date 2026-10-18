@@ -163,13 +163,21 @@ FalkorDB sits inside every agent turn, so it has to be fast. Measured with
 
 ## What was verified
 
-- `uv run pytest`: 26 tests — graph writers and the six queries on a live FalkorDB, flow
+- `uv run pytest`: 28 tests — graph writers and the six queries on a live FalkorDB, flow
   hard rules, signature round-trip and tamper, webhook idempotency through the API, curator
   heuristics, the whole mock loop over HTTP, the Shravan client contract (offline), the
   Cursor hook dialect, and regressions for every bug found in the end-to-end debug pass.
-- Every page checked in headless Chrome at 1440x900 and 390x844: no console errors, no
-  horizontal overflow, a mock call answered through the UI, provenance and search exercised,
-  empty states verified.
+- **Production** (`https://summon.77-42-70-237.sslip.io`, the same stack as
+  `summon.shravan-ai.tech`): FalkorDB + API behind Traefik with a Let's Encrypt certificate;
+  Summon's two voice flows registered as Shravan.ai agents; a sandbox call placed through
+  Shravan.ai's API from the live server came back through two signed webhooks and was
+  analyzed; a real Claude Code run on a laptop wired to the live server placed a call,
+  received the answer and continued; the Groq-backed curator extracted a decision, an
+  instruction and a quiet-hours preference from a spoken transcript; SSE streams through
+  the proxy.
+- Every page checked in headless Chrome at 1440x900 and 390x844, locally and on production:
+  no console errors, no horizontal overflow, a mock call answered through the UI, provenance
+  and search exercised, empty states verified.
 - Real `claude -p` run in `examples/demo_repo` with the Stop hook: Claude asked *"Should
   /version also include the git commit hash?"*, the call was answered, Claude implemented
   the spoken instruction, and the follow-up Task was linked `EXECUTED_AS` to the Instruction.
